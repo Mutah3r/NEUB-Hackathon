@@ -5,10 +5,10 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import Home from "../pages/Home";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
-import CitizenDashboard from "../pages/dashboard/CitizenDashboard";
-import CentreDashboard from "../pages/dashboard/CentreDashboard";
-import AuthorityDashboard from "../pages/dashboard/AuthorityDashboard";
 import RoleRedirect from "../pages/dashboard/RoleRedirect";
+import PrivateRoute from "./PrivateRoute";
+import Unauthorized from "../pages/errors/Unauthorized";
+import { CitizenOnly, CentreOnly, AuthorityOnly } from "./RoleGuards";
 
 const router = createBrowserRouter([
   {
@@ -26,12 +26,18 @@ const router = createBrowserRouter([
   },
   {
     path: "dashboard",
-    Component: DashboardLayout,
+    Component: PrivateRoute,
     children: [
-      { index: true, Component: RoleRedirect },
-      { path: "citizen", Component: CitizenDashboard },
-      { path: "centre", Component: CentreDashboard },
-      { path: "authority", Component: AuthorityDashboard },
+      {
+        Component: DashboardLayout,
+        children: [
+          { index: true, Component: RoleRedirect },
+          { path: "citizen", Component: CitizenOnly },
+          { path: "centre", Component: CentreOnly },
+          { path: "authority", Component: AuthorityOnly },
+          { path: "unauthorized", Component: Unauthorized },
+        ],
+      },
     ],
   },
 ]);

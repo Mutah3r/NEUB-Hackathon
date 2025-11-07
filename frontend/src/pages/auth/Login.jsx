@@ -26,8 +26,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("citizen");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [centreId, setCentreId] = useState("");
+  const [email, setEmail] = useState("");  const [centreId, setCentreId] = useState("");
   const [password, setPassword] = useState("");
   const [otpOpen, setOtpOpen] = useState(false);
   const [submittingOtp, setSubmittingOtp] = useState(false);
@@ -134,8 +133,15 @@ const Login = () => {
         const token = res?.token;
         const roleResp = res?.role;
         if (token) localStorage.setItem("auth_token", token);
-        // Map backend role 'vacc_cdntre' to app role 'centre'
-        const appRole = roleResp === "vacc_cdntre" ? "centre" : roleResp || "centre";
+        // Normalize centre role to 'vacc_centre' (accept legacy values)
+        const appRole =
+          roleResp === "vacc_centre"
+            ? "vacc_centre"
+            : roleResp === "vcc_centre"
+            ? "vacc_centre"
+            : roleResp === "centre"
+            ? "vacc_centre"
+            : "vacc_centre";
         localStorage.setItem("role", appRole);
         setToast({ show: true, message: "Logged in successfully." });
         setTimeout(() => setToast({ show: false, message: "" }), 3500);
