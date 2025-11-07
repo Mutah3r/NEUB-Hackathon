@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Authority = require('../models/authority');
+const Citizen = require('../models/citizen');
 
 async function register(req, res) {
   try {
@@ -46,3 +47,62 @@ async function login(req, res) {
 }
 
 module.exports = { register, login };
+
+// Authority-only: Create citizen directly without OTP
+async function addCitizenDirect(req, res) {
+  try {
+    const role = req.user?.role;
+    if (role !== 'authority') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const {
+      name,
+      reg_no,
+      NID_no,
+      Birth_Certificate_no,
+      NID_or_Birth,
+      gender,
+      DOB,
+      phone_number,
+      vaccine_taken,
+      vaccine_certificate_qr,
+    } = req.body || {};
+
+    if (!reg_no) {
+      return res.status(400).json({ message: 'reg_no is required' });
+    }
+
+    const existing = await Citizen.findOne({ reg_no });
+    if (existing) {
+      return res.status(409).json({ message: 'Citizen with this reg_no already exists' });
+    }
+
+    const payload = {
+      name,
+      reg_no,
+      NID_no,
+      Birth_Certificate_no,
+      NID_or_Birth,
+      gender,
+      DOB: DOB ? new Date(DOB) : undefined,
+      phone_number,
+      vaccine_certificate_qr,
+    };
+
+    if (Array.isArray(vaccine_taken)) {
+      payload.vaccine_taken = vaccine_taken.map((v) => ({
+        vaccine_id: v?.vaccine_id,
+        vaccine_name: v?.vaccine_name,
+        time_stamp: v?.time_stamp ? new Date(v.time_stamp) : undefined,
+      })).filter((v) => v.vaccine_id && v.vaccine_name);
+    }
+
+    const created = await Citizen.create(payload);
+    return res.status(201).json(created);
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to create citizen' });
+  }
+}
+
+module.exports.addCitizenDirect = addCitizenDirect;
