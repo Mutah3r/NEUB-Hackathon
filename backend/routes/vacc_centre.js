@@ -105,4 +105,43 @@ router.post('/login', controller.login);
 // Vacc centre adds staff
 router.post('/staff', authenticateToken, authorizeRoles('vacc_centre'), controller.addStaff);
 
+/**
+ * @swagger
+ * /api/vacc_centre/{id}:
+ *   put:
+ *     summary: Update vaccination centre (authority or centre)
+ *     tags: [VaccCentre]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               location: { type: string }
+ *               district: { type: string }
+ *               lattitude: { type: number }
+ *               longitude: { type: number }
+ *               password: { type: string }
+ *     responses:
+ *       200:
+ *         description: Centre updated
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not found
+ */
+router.put('/:id', authenticateToken, authorizeRoles('authority', 'vacc_centre'), controller.updateCentre);
+
 module.exports = router;

@@ -24,8 +24,7 @@ const centreVaccineSchema = new mongoose.Schema({
   },
   requested_status : {
         type : String,
-        enum : ["Requested", "sent"],
-        default : None 
+        enum : ["requested", "sent"],
   },
   created_at: {
     type: Date,
@@ -55,6 +54,7 @@ module.exports = CentreVaccine;
 // delete center vaccine (only this schema id)
 // get requested stock by (centre vaccine id and requested stock status: requested)
 // get all requested stock by request status (requested)
+// update status (sent)
 
 
 // vaccine center
