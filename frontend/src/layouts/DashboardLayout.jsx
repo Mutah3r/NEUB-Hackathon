@@ -90,7 +90,7 @@ const DashboardLayout = () => {
       { to: `${basePath}/stock`, label: "Vaccine Stock", icon: FiDatabase },
       {
         to: `${basePath}/forecast`,
-        label: "Demand Forecasting",
+        label: "Forecasting",
         icon: FiBarChart2,
       },
       { to: `${basePath}/staff`, label: "Staff Management", icon: FiUsers },

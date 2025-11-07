@@ -248,7 +248,9 @@ const CentreStock = () => {
                     <span className="text-[#081F2E]">{row.totalServed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#0c2b40]/80">Total Ampules</span>
+                    <span className="text-[#0c2b40]/80">
+                      Total Ampules Used
+                    </span>
                     <span className="text-[#081F2E]">
                       {row.totalAmpulesUsed}
                     </span>
