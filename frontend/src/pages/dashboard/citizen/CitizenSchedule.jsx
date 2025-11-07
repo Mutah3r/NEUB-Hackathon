@@ -1,8 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { FiCalendar, FiChevronDown, FiMapPin, FiSearch } from "react-icons/fi";
-import MapModal from "../../../components/MapModal";
 import GoogleMap from "../../../components/GoogleMap";
+import MapModal from "../../../components/MapModal";
+import Notification from "../../../components/Notification";
+import ScheduleRequestModal from "../../../components/ScheduleRequestModal";
 
 const vaccinesMock = [
   {
@@ -74,6 +76,30 @@ const centresMock = [
     lng: 79.0399519,
     availableDate: "2025-11-15T00:00:00.000Z",
   },
+  {
+    id: "c4",
+    name: "Dummy Health Centre",
+    address: "Near Kanpur, Uttar Pradesh",
+    lat: 26.234552,
+    lng: 78.0839519,
+    availableDate: "2025-11-15T00:00:00.000Z",
+  },
+  {
+    id: "c5",
+    name: "Dummy Health Centre 2",
+    address: "Near Kanpur, Uttar Pradesh",
+    lat: 25.1988383,
+    lng: 79.0399519,
+    availableDate: "2025-11-15T00:00:00.000Z",
+  },
+  {
+    id: "c6",
+    name: "Dummy Health Centre 3",
+    address: "Connaught Place, New Delhi",
+    lat: 28.6139,
+    lng: 77.2090,
+    availableDate: "2025-11-25T00:00:00.000Z",
+  },
 ];
 
 const formatLongDate = (iso) => {
@@ -98,6 +124,26 @@ const CitizenSchedule = () => {
   const [activeCentre, setActiveCentre] = useState(centresMock[0]);
   const [showAllMarkers, setShowAllMarkers] = useState(true);
   const [mapOpen, setMapOpen] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestCentre, setRequestCentre] = useState(null);
+  const [toast, setToast] = useState({ show: false, type: "success", message: "" });
+  const [visibleMarkers, setVisibleMarkers] = useState(
+    centresMock.map((c) => ({
+      id: c.id,
+      lat: c.lat,
+      lng: c.lng,
+      title: c.name,
+    }))
+  );
+  const [findingNearest, setFindingNearest] = useState(false);
+  const [geoError, setGeoError] = useState(null);
+  const isNearestMode =
+    visibleMarkers.length > 0 && visibleMarkers.length < centresMock.length;
+  const visibleCentres = useMemo(() => {
+    const ids = new Set(visibleMarkers.map((m) => m.id));
+    if (ids.size === centresMock.length) return centresMock;
+    return centresMock.filter((c) => ids.has(c.id));
+  }, [visibleMarkers]);
 
   const filteredVaccines = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -106,31 +152,75 @@ const CitizenSchedule = () => {
   }, [query]);
 
   const mapMarkers = useMemo(
-    () => centresMock.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng, title: c.name })),
+    () =>
+      centresMock.map((c) => ({
+        id: c.id,
+        lat: c.lat,
+        lng: c.lng,
+        title: c.name,
+      })),
     []
   );
 
-  // For right-side map, compute bounds and marker positions
-  const bounds = useMemo(() => {
-    const lats = centresMock.map((c) => c.lat);
-    const lngs = centresMock.map((c) => c.lng);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-    return { minLat, maxLat, minLng, maxLng };
-  }, []);
-
-  const markerPos = (lat, lng) => {
-    const { minLat, maxLat, minLng, maxLng } = bounds;
-    const x = (lng - minLng) / (maxLng - minLng);
-    const y = (maxLat - lat) / (maxLat - minLat);
-    const left = `${Math.min(100, Math.max(0, x * 100))}%`;
-    const top = `${Math.min(100, Math.max(0, y * 100))}%`;
-    return { left, top };
+  const haversineKm = (lat1, lon1, lat2, lon2) => {
+    const toRad = (v) => (v * Math.PI) / 180;
+    const R = 6371; // km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   };
 
-  const mapSrc = `https://maps.google.com/maps?q=${activeCentre.lat},${activeCentre.lng}&hl=en&z=13&output=embed`;
+  const showNearestThree = () => {
+    setFindingNearest(true);
+    setGeoError(null);
+    if (!navigator.geolocation) {
+      setGeoError("Geolocation not supported in this browser");
+      setFindingNearest(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const ranked = centresMock
+          .map((c) => ({
+            ...c,
+            distance: haversineKm(latitude, longitude, c.lat, c.lng),
+          }))
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, 3);
+
+        const subset = ranked.map((c) => ({
+          id: c.id,
+          lat: c.lat,
+          lng: c.lng,
+          title: c.name,
+        }));
+        setVisibleMarkers(subset);
+        setActiveCentre(ranked[0]);
+        setShowAllMarkers(true);
+        setFindingNearest(false);
+      },
+      (err) => {
+        setGeoError(err.message || "Failed to get location");
+        setFindingNearest(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const showAllCentres = () => {
+    setVisibleMarkers(
+      centresMock.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng, title: c.name }))
+    );
+    setShowAllMarkers(true);
+  };
 
   return (
     <motion.section
@@ -139,6 +229,12 @@ const CitizenSchedule = () => {
       transition={{ type: "spring", stiffness: 260, damping: 24 }}
       className="space-y-6"
     >
+      <Notification
+        show={toast.show}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast((t) => ({ ...t, show: false }))}
+      />
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
@@ -244,6 +340,7 @@ const CitizenSchedule = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 24 }}
           className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#081F2E]/10 p-6"
+          layout
         >
           <div className="flex items-center gap-3 mb-3">
             <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F04E36]/10 text-[#F04E36] ring-1 ring-[#F04E36]/20">
@@ -254,41 +351,48 @@ const CitizenSchedule = () => {
             </h3>
           </div>
           <div className="space-y-3">
-            {centresMock.map((c) => (
-              <div
-                key={c.id}
-                className="rounded-xl bg-white ring-1 ring-[#081F2E]/10 p-4 flex items-start justify-between"
-              >
-                <div>
-                  <div className="font-semibold text-[#081F2E]">{c.name}</div>
-                  <div className="text-sm text-[#0c2b40]/70">{c.address}</div>
-                  <div className="text-sm text-[#0c2b40]/70">
-                    Available: {formatLongDate(c.availableDate)}
+            <AnimatePresence initial={false}>
+              {visibleCentres.map((c) => (
+                <motion.div
+                  key={c.id}
+                  layout
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                  className="rounded-xl bg-white ring-1 ring-[#081F2E]/10 p-4 flex items-start justify-between"
+                >
+                  <div>
+                    <div className="font-semibold text-[#081F2E]">{c.name}</div>
+                    <div className="text-sm text-[#0c2b40]/70">{c.address}</div>
+                    <div className="text-sm text-[#0c2b40]/70">
+                      Available: {formatLongDate(c.availableDate)}
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <button
-                    onClick={() => {
-                      setActiveCentre(c);
-                      setMapOpen(true);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#EAB308] text-white px-3 py-2 text-sm font-medium hover:bg-[#d4a006]"
-                  >
-                    <FiMapPin />
-                    <span>Map</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveCentre(c);
-                      setShowAllMarkers(false);
-                    }}
-                    className="text-xs text-[#081F2E]/70 hover:text-[#081F2E]"
-                  >
-                    Show on right map
-                  </button>
-                </div>
-              </div>
-            ))}
+                  <div className="flex flex-col items-end gap-2">
+                    <button
+                      onClick={() => {
+                        setActiveCentre(c);
+                        setMapOpen(true);
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#EAB308] text-white px-3 py-2 text-sm font-medium hover:bg-[#d4a006]"
+                    >
+                      <FiMapPin />
+                      <span>Map</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setRequestCentre(c);
+                        setRequestOpen(true);
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#F04E36] text-white px-3 py-2 text-sm font-medium hover:bg-[#e3452f]"
+                    >
+                      Send Request
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </motion.div>
 
@@ -299,29 +403,30 @@ const CitizenSchedule = () => {
           transition={{ type: "spring", stiffness: 260, damping: 24 }}
           className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#081F2E]/10 p-6"
         >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
-              <FiMapPin />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
+                <FiMapPin />
+              </div>
+              <h3 className="text-lg font-semibold text-[#081F2E]">
+                Centres Map
+              </h3>
             </div>
-            <h3 className="text-lg font-semibold text-[#081F2E]">
-              Centres Map
-            </h3>
+            <button
+              onClick={() => (isNearestMode ? showAllCentres() : showNearestThree())}
+              disabled={findingNearest}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#F04E36] to-[#EAB308] text-white px-3 py-2 text-sm font-semibold shadow ring-1 ring-white/10 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#F04E36]/40"
+            >
+              {findingNearest ? "Locating..." : isNearestMode ? "Show All" : "Show nearest"}
+            </button>
           </div>
           <div className="mb-2 flex items-center justify-between">
             <div className="text-xs text-[#0c2b40]/60">
               Click a marker or select a centre.
             </div>
-            {!showAllMarkers && (
-              <button
-                onClick={() => setShowAllMarkers(true)}
-                className="text-xs rounded-lg px-2 py-1 bg-[#081F2E]/5 text-[#081F2E] ring-1 ring-[#081F2E]/10 hover:bg-[#081F2E]/10"
-              >
-                Show all markers
-              </button>
-            )}
           </div>
           <GoogleMap
-            markers={mapMarkers}
+            markers={visibleMarkers}
             activeId={activeCentre.id}
             showAll={showAllMarkers}
             onMarkerClick={(m) => {
@@ -330,6 +435,9 @@ const CitizenSchedule = () => {
             }}
             height={380}
           />
+          {geoError && (
+            <div className="mt-2 text-xs text-[#F04E36]">{geoError}</div>
+          )}
         </motion.div>
       </div>
 
@@ -340,6 +448,17 @@ const CitizenSchedule = () => {
         lat={activeCentre.lat}
         lng={activeCentre.lng}
         title={activeCentre.name}
+      />
+      <ScheduleRequestModal
+        isOpen={requestOpen}
+        onClose={() => setRequestOpen(false)}
+        onConfirm={() => {
+          setRequestOpen(false);
+          setToast({ show: true, type: "success", message: "Successfully sent schedule request." });
+          setTimeout(() => setToast((t) => ({ ...t, show: false })), 3500);
+        }}
+        centre={requestCentre}
+        vaccine={selected}
       />
     </motion.section>
   );
