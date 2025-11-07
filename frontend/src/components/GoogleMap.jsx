@@ -5,6 +5,7 @@ const GoogleMap = ({
   activeId,
   showAll = true,
   onMarkerClick,
+  onMapClick, // optional: receive lat/lng when user clicks the map
   height = 380,
   className = "",
 }) => {
@@ -48,6 +49,18 @@ const GoogleMap = ({
         streetViewControl: false,
         fullscreenControl: true,
       });
+      // Attach click listener once when map is created
+      if (typeof onMapClick === "function") {
+        mapRef.current.addListener("click", (e) => {
+          try {
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            onMapClick({ lat, lng });
+          } catch (_) {
+            // ignore
+          }
+        });
+      }
     }
 
     // Clear previous markers
@@ -83,7 +96,7 @@ const GoogleMap = ({
       marker.addListener("click", () => onMarkerClick?.(active));
       markerObjsRef.current.push(marker);
     }
-  }, [ready, markers, activeId, showAll, onMarkerClick]);
+  }, [ready, markers, activeId, showAll, onMarkerClick, onMapClick]);
 
   return (
     <div className={`relative rounded-xl overflow-hidden ring-1 ring-[#081F2E]/10 ${className}`}>
