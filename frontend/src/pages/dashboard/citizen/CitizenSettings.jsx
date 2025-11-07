@@ -1,14 +1,33 @@
 import { motion } from "framer-motion";
 import { FiSettings, FiUser } from "react-icons/fi";
+import { useOutletContext } from "react-router";
 
 const CitizenSettings = () => {
-  // Placeholder profile details; wire to real user data later
+  const { user } = useOutletContext() || {};
+
+  const formatOrdinalDate = (iso) => {
+    if (!iso) return "-";
+    const d = new Date(iso);
+    const day = d.getDate();
+    const suffix = (n) => {
+      if (n % 10 === 1 && n % 100 !== 11) return "st";
+      if (n % 10 === 2 && n % 100 !== 12) return "nd";
+      if (n % 10 === 3 && n % 100 !== 13) return "rd";
+      return "th";
+    };
+    const month = d.toLocaleString("en-GB", { month: "long" });
+    const year = d.getFullYear();
+    return `${day}${suffix(day)} ${month}, ${year}`;
+  };
+
   const profile = {
-    name: localStorage.getItem("user_name") || "Md. Rahim Uddin",
-    email: localStorage.getItem("user_email") || "rahim@example.com",
-    nid: localStorage.getItem("nid") || "1234 5678 9012",
-    birthCert: localStorage.getItem("birth_cert") || "BC-0901-2025",
-    dob: localStorage.getItem("dob") || "1998-08-15",
+    name: user?.name || "",
+    gender: user?.gender || "",
+    dob: formatOrdinalDate(user?.DOB),
+    regNo: user?.reg_no || "",
+    idType: user?.NID_or_Birth ? "NID" : "Birth Certificate",
+    idNumber: user?.NID_or_Birth ? user?.NID_no : user?.Birth_Certificate_no,
+    phone: user?.phone_number || "",
   };
 
   return (
@@ -34,9 +53,9 @@ const CitizenSettings = () => {
             <div className="font-medium text-[#081F2E]">Personal Info</div>
           </div>
           <div className="text-[#0c2b40]/80 text-sm">
-            <div><span className="font-medium">Name:</span> {profile.name}</div>
-            <div><span className="font-medium">Email:</span> {profile.email}</div>
-            <div><span className="font-medium">Date of Birth:</span> {profile.dob}</div>
+            <div><span className="font-medium">Name:</span> {profile.name || "-"}</div>
+            <div><span className="font-medium">Gender:</span> {profile.gender || "-"}</div>
+            <div><span className="font-medium">Date of Birth:</span> {profile.dob || "-"}</div>
           </div>
         </div>
 
@@ -45,11 +64,13 @@ const CitizenSettings = () => {
             <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#081F2E]/10 text-[#081F2E]">
               <FiUser />
             </div>
-            <div className="font-medium text-[#081F2E]">Identity</div>
+            <div className="font-medium text-[#081F2E]">Identity & Contact</div>
           </div>
           <div className="text-[#0c2b40]/80 text-sm">
-            <div><span className="font-medium">NID:</span> {profile.nid}</div>
-            <div><span className="font-medium">Birth Certificate:</span> {profile.birthCert}</div>
+            <div><span className="font-medium">Registration No:</span> {profile.regNo || "-"}</div>
+            <div><span className="font-medium">ID Type:</span> {profile.idType || "-"}</div>
+            <div><span className="font-medium">ID Number:</span> {profile.idNumber || "-"}</div>
+            <div><span className="font-medium">Phone:</span> {profile.phone || "-"}</div>
           </div>
         </div>
       </div>

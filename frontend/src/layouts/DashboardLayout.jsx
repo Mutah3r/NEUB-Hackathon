@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import {
@@ -13,11 +13,14 @@ import {
   FiMessageSquare,
   FiSettings,
 } from "react-icons/fi";
+import { getCurrentUser } from "../services/userService";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
 
   const roleSegment = useMemo(() => {
     const seg = location.pathname.split("/")[2] || localStorage.getItem("role") || "citizen";
@@ -25,6 +28,24 @@ const DashboardLayout = () => {
   }, [location.pathname]);
 
   const basePath = `/dashboard/${roleSegment}`;
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setUserLoading(true);
+        const data = await getCurrentUser();
+        if (mounted) setUser(data);
+      } catch (e) {
+        // fail silently for now; can integrate Notification later
+      } finally {
+        if (mounted) setUserLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const navItems = useMemo(() => {
     if (roleSegment === "citizen") {
@@ -78,6 +99,16 @@ const DashboardLayout = () => {
           <div className="text-sm text-[#0c2b40]/70 hidden sm:block capitalize">
             {roleSegment}
           </div>
+          {user && (
+            <motion.span
+              initial={{ opacity: 0, x: 6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 22 }}
+              className="hidden sm:block text-sm font-medium text-[#081F2E]"
+            >
+              {String(user?.name || "").split(" ")[0]}
+            </motion.span>
+          )}
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
             <FiUser />
           </div>
@@ -148,7 +179,7 @@ const DashboardLayout = () => {
         {/* Main content */}
         <main className="flex-1 h-full overflow-y-auto">
           <div className="p-4 sm:p-6">
-            <Outlet />
+            <Outlet context={{ user }} />
           </div>
         </main>
       </div>
