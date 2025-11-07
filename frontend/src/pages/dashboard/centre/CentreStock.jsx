@@ -82,7 +82,11 @@ const STOCK_TABLE = [
 
 const CentreStock = () => {
   const [stockRows, setStockRows] = useState(STOCK_TABLE);
-  const [requestModal, setRequestModal] = useState({ open: false, item: null });
+  const [requestModal, setRequestModal] = useState({
+    open: false,
+    item: null,
+    amount: "",
+  });
   const [addModal, setAddModal] = useState({
     open: false,
     item: null,
@@ -90,21 +94,24 @@ const CentreStock = () => {
   });
   const [feedback, setFeedback] = useState(null);
 
-  const openRequest = (item) => setRequestModal({ open: true, item });
-  const closeRequest = () => setRequestModal({ open: false, item: null });
+  const openRequest = (item) =>
+    setRequestModal({ open: true, item, amount: "" });
+  const closeRequest = () =>
+    setRequestModal({ open: false, item: null, amount: "" });
   const confirmRequest = () => {
     const item = requestModal.item;
+    const amt = Math.max(0, parseInt(requestModal.amount || "0", 10));
     if (!item) return;
     setStockRows((prev) =>
       prev.map((r) =>
         r.vaccineId === item.vaccineId
-          ? { ...r, requestStatus: "requested" }
+          ? { ...r, requestStatus: "requested", requestedAmount: amt }
           : r
       )
     );
     setFeedback({
       type: "success",
-      message: `Request initiated for ${item.vaccineName} (${item.vaccineId}).`,
+      message: `Requested ${amt} ampules for ${item.vaccineName} (${item.vaccineId}).`,
     });
     setTimeout(() => setFeedback(null), 2200);
     closeRequest();
@@ -171,7 +178,12 @@ const CentreStock = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.06 }}
-                className="rounded-2xl p-5 bg-white ring-1 ring-[#081F2E]/10 shadow-sm"
+                className={
+                  "rounded-2xl p-5 shadow-sm ring-1 font-bold " +
+                  (statusRequested
+                    ? "bg-gradient-to-br from-[#FFF5E6] via-white to-[#FFEFEA] ring-[#EAB308]/20"
+                    : "bg-gradient-to-br from-[#E9F9EE] via-white to-[#D7F3E2] ring-[#2FC94E]/20")
+                }
               >
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-[#0c2b40]/70">
@@ -199,23 +211,23 @@ const CentreStock = () => {
                 <div className="mt-4 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-[#0c2b40]/80">Vaccine Name</span>
-                    <span className="text-[#081F2E] font-semibold">
+                    <span className="text-[#081F2E] font-bold">
                       {row.vaccineName}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#0c2b40]/80">Current Stock</span>
-                    <span className="text-[#081F2E] font-semibold">
+                    <span className="text-[#081F2E] font-bold">
                       {row.currentStock}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#0c2b40]/80">Requested Stock</span>
-                    <span className="text-[#081F2E] font-medium">
+                    <span className="text-[#081F2E] font-bold">
                       {row.requestedAmount}
                     </span>
                   </div>
-                  <div className="mt-2 p-3 rounded-xl bg-[#081F2E]/5 ring-1 ring-[#081F2E]/15">
+                  <div className="mt-2 p-3 rounded-xl bg-[#081F2E]/5 ring-1 ring-[#081F2E]/15 flex justify-between items-center">
                     <div className="text-xs text-[#0c2b40]/70">
                       Request Status
                     </div>
@@ -223,7 +235,7 @@ const CentreStock = () => {
                       className={
                         "mt-1 inline-flex items-center gap-2 text-xs rounded-md px-2 py-1 ring-1 " +
                         (statusRequested
-                          ? "bg-[#EAB308]/15 text-[#EAB308] ring-[#EAB308]/30"
+                          ? "bg-[#EAB308]/15 text-[#A05A00] ring-[#EAB308]/30"
                           : "bg-[#2FC94E]/15 text-[#1a8a35] ring-[#2FC94E]/30")
                       }
                     >
@@ -292,6 +304,18 @@ const CentreStock = () => {
                 </span>
                 )?
               </p>
+              <div className="mt-3">
+                <input
+                  type="number"
+                  min="0"
+                  value={requestModal.amount}
+                  onChange={(e) =>
+                    setRequestModal((m) => ({ ...m, amount: e.target.value }))
+                  }
+                  className="w-full rounded-xl border border-[#081F2E]/20 px-3 py-2 text-sm text-[#081F2E] focus:outline-none focus:ring-2 focus:ring-[#081F2E]/40"
+                  placeholder="Requested ampules e.g., 50"
+                />
+              </div>
               <div className="mt-4 flex justify-end gap-2">
                 <motion.button
                   whileTap={{ scale: 0.98 }}
