@@ -12,6 +12,7 @@ import { useNavigate } from "react-router";
 import OTPModal from "../../components/OTPModal";
 import EmailModal from "../../components/EmailModal";
 import Notification from "../../components/Notification";
+import { requestCitizenLoginOtp, verifyLoginOtp } from "../../services/citizenService";
 
 const TABS = [
   { key: "citizen", label: "Citizen", icon: FiPhone },
@@ -27,6 +28,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [otpOpen, setOtpOpen] = useState(false);
   const [submittingOtp, setSubmittingOtp] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
   const [error, setError] = useState("");
   const containerRef = useRef(null);
   const tabRefs = useRef([]);
@@ -40,14 +42,23 @@ const Login = () => {
     [activeTab]
   );
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     setError("");
     if (!/^\+?\d{10,14}$/.test(phone)) {
       setError("Please enter a valid phone number.");
       return;
     }
-    // Mock sending OTP
-    setTimeout(() => setOtpOpen(true), 300);
+    try {
+      setSendingOtp(true);
+      await requestCitizenLoginOtp({ phone_number: phone });
+      setOtpOpen(true);
+      setToast({ show: true, message: `OTP sent to ${phone}. Enter the code to continue.` });
+      setTimeout(() => setToast({ show: false, message: "" }), 4500);
+    } catch (err) {
+      setError(err?.message || "Could not send OTP. Please try again.");
+    } finally {
+      setSendingOtp(false);
+    }
   };
 
   // Measure active tab to place indicator precisely
@@ -67,21 +78,22 @@ const Login = () => {
     return () => window.removeEventListener("resize", updateIndicator);
   }, [tabIndex]);
 
-  const handleOtpSubmit = (code) => {
+  const handleOtpSubmit = async (code) => {
     setSubmittingOtp(true);
-    // Mock verify OTP (accept 1234)
-    setTimeout(() => {
+    try {
+      const res = await verifyLoginOtp({ phone_number: phone, otp: code });
+      const token = res?.token;
+      if (token) localStorage.setItem("auth_token", token);
+      localStorage.setItem("role", "citizen");
+      setOtpOpen(false);
+      setToast({ show: true, message: "Logged in successfully." });
+      setTimeout(() => setToast({ show: false, message: "" }), 3500);
+      navigate("/dashboard/citizen");
+    } catch (err) {
+      setError(err?.message || "Invalid OTP. Try again.");
+    } finally {
       setSubmittingOtp(false);
-      if (code === "1234") {
-        setOtpOpen(false);
-        // Persist role and a mock token for session
-        localStorage.setItem("role", "citizen");
-        localStorage.setItem("auth_token", "mock_token_citizen");
-        navigate("/dashboard/citizen");
-      } else {
-        setError("Invalid OTP. Try again.");
-      }
-    }, 800);
+    }
   };
 
   const handleCredentialLogin = () => {
@@ -174,9 +186,10 @@ const Login = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleSendOtp}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#F04E36] text-white px-4 py-2 font-medium hover:bg-[#e3452f]"
+              disabled={sendingOtp}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#F04E36] text-white px-4 py-2 font-medium hover:bg-[#e3452f] disabled:opacity-50"
             >
-              <FiPhone /> Send OTP
+              <FiPhone /> {sendingOtp ? "Sending..." : "Send OTP"}
             </button>
           </div>
           <OTPModal
