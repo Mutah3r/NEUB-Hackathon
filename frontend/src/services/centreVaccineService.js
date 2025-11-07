@@ -4,4 +4,16 @@ export function listAssignedCentreVaccines() {
   return api.get(`/centre_vaccine/assigned`);
 }
 
-export default { listAssignedCentreVaccines };
+export function listAssignedCentreVaccinesByCentre(id) {
+  return api.get(`/centre_vaccine/assigned/${id}`);
+}
+
+export function assignVaccineToCentre({ centre_id, vaccine_id, vaccine_name }) {
+  return api.post(`/centre_vaccine`, { centre_id, vaccine_id, vaccine_name });
+}
+
+export function getAvailableCentresByVaccine(vaccineId) {
+  return api.get(`/centre_vaccine/available/${vaccineId}`);
+}
+
+export default { listAssignedCentreVaccines, listAssignedCentreVaccinesByCentre, assignVaccineToCentre, getAvailableCentresByVaccine };
