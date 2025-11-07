@@ -191,4 +191,28 @@ router.get('/log/staff/:staff_id', authenticateToken, authorizeRoles('staff', 'a
  */
 router.get('/log/citizen/:citizen_id', authenticateToken, authorizeRoles('citizen','staff', 'authority', 'vacc_centre'), controller.getLogsByCitizen);
 
+/**
+ * @swagger
+ * /api/vaccine/log/reg/{reg_no}:
+ *   get:
+ *     summary: Get logs by citizen registration id (citizen/staff/authority/centre)
+ *     tags: [Vaccine Log]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reg_no
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Logs with citizen info
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Citizen not found
+ */
+router.get('/log/reg/:reg_no', authenticateToken, authorizeRoles('citizen','staff', 'authority', 'vacc_centre'), controller.getLogsByRegNo);
+
 module.exports = router;
