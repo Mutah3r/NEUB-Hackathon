@@ -12,6 +12,9 @@ import {
   FiActivity,
   FiMessageSquare,
   FiSettings,
+  FiDatabase,
+  FiBarChart2,
+  FiUsers,
 } from "react-icons/fi";
 import { getCurrentUser } from "../services/userService";
 
@@ -62,9 +65,15 @@ const DashboardLayout = () => {
         { to: basePath, label: "Home", icon: FiHome },
       ];
     }
-    // vacc_centre or other roles
+    // vacc_centre / centre role
     return [
       { to: basePath, label: "Home", icon: FiHome },
+      { to: `${basePath}/appointments`, label: "View Appointments", icon: FiClipboard },
+      { to: `${basePath}/stock`, label: "Vaccine Stock", icon: FiDatabase },
+      { to: `${basePath}/forecast`, label: "Demand Forecasting", icon: FiBarChart2 },
+      { to: `${basePath}/staff`, label: "Staff Management", icon: FiUsers },
+      { to: `${basePath}/logs`, label: "Logs", icon: FiActivity },
+      { to: `${basePath}/insights`, label: "AI Insights", icon: FiMessageSquare },
     ];
   }, [roleSegment, basePath]);
 

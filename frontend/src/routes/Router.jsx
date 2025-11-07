@@ -15,6 +15,13 @@ import CitizenAppointments from "../pages/dashboard/citizen/CitizenAppointments"
 import CitizenLogs from "../pages/dashboard/citizen/CitizenLogs";
 import CitizenAIGuidance from "../pages/dashboard/citizen/CitizenAIGuidance";
 import CitizenSettings from "../pages/dashboard/citizen/CitizenSettings";
+import CentreDashboard from "../pages/dashboard/CentreDashboard";
+import CentreAppointments from "../pages/dashboard/centre/CentreAppointments";
+import CentreStock from "../pages/dashboard/centre/CentreStock";
+import CentreForecast from "../pages/dashboard/centre/CentreForecast";
+import CentreStaff from "../pages/dashboard/centre/CentreStaff";
+import CentreLogs from "../pages/dashboard/centre/CentreLogs";
+import CentreAIInsights from "../pages/dashboard/centre/CentreAIInsights";
 
 const router = createBrowserRouter([
   {
@@ -50,7 +57,19 @@ const router = createBrowserRouter([
               { path: "settings", Component: CitizenSettings },
             ],
           },
-          { path: "centre", Component: CentreOnly },
+          {
+            path: "centre",
+            Component: CentreOnly,
+            children: [
+              { index: true, Component: CentreDashboard },
+              { path: "appointments", Component: CentreAppointments },
+              { path: "stock", Component: CentreStock },
+              { path: "forecast", Component: CentreForecast },
+              { path: "staff", Component: CentreStaff },
+              { path: "logs", Component: CentreLogs },
+              { path: "insights", Component: CentreAIInsights },
+            ],
+          },
           { path: "authority", Component: AuthorityOnly },
           { path: "unauthorized", Component: Unauthorized },
         ],
