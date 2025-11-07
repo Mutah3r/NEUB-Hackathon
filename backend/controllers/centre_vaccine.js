@@ -302,9 +302,9 @@ async function getAssignedForCentre(req, res) {
 
     // Fetch vaccine metadata by names and return only name and description
     const vaccines = await Vaccine.find({ name: { $in: names } })
-      .select('name description _id')
+      .select('name description _id vaccine_id')
       .lean();
-    const result = (vaccines || []).map((v) => ({ id: v._id.toString(), name: v.name, description: v.description }));
+    const result = (vaccines || []).map((v) => ({ id: v._id.toString(), name: v.name, description: v.description, vaccine_id: v.vaccine_id }));
     return res.status(200).json(result);
   } catch (err) {
     console.error('getAssignedForCentre error:', err);
