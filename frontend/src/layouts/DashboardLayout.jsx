@@ -1,21 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import {
-  FiHome,
-  FiLogOut,
-  FiUser,
+  FiActivity,
+  FiBarChart2,
+  FiCalendar,
   FiChevronLeft,
   FiChevronRight,
-  FiCalendar,
   FiClipboard,
-  FiActivity,
+  FiDatabase,
+  FiHome,
+  FiLogOut,
   FiMessageSquare,
   FiSettings,
-  FiDatabase,
-  FiBarChart2,
+  FiUser,
   FiUsers,
 } from "react-icons/fi";
+import { GoDependabot } from "react-icons/go";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { getCurrentUser } from "../services/userService";
 
 const DashboardLayout = () => {
@@ -26,7 +27,10 @@ const DashboardLayout = () => {
   const [userLoading, setUserLoading] = useState(true);
 
   const roleSegment = useMemo(() => {
-    const seg = location.pathname.split("/")[2] || localStorage.getItem("role") || "citizen";
+    const seg =
+      location.pathname.split("/")[2] ||
+      localStorage.getItem("role") ||
+      "citizen";
     return seg;
   }, [location.pathname]);
 
@@ -54,26 +58,48 @@ const DashboardLayout = () => {
     if (roleSegment === "citizen") {
       return [
         { to: basePath, label: "Home", icon: FiHome },
-        { to: `${basePath}/schedule`, label: "Schedule Vaccine", icon: FiCalendar },
-        { to: `${basePath}/appointments`, label: "My Appointments", icon: FiClipboard },
+        {
+          to: `${basePath}/schedule`,
+          label: "Schedule Vaccine",
+          icon: FiCalendar,
+        },
+        {
+          to: `${basePath}/appointments`,
+          label: "My Appointments",
+          icon: FiClipboard,
+        },
         { to: `${basePath}/logs`, label: "Logs", icon: FiActivity },
-        { to: `${basePath}/ai`, label: "Get AI Guidance", icon: FiMessageSquare },
+        {
+          to: `${basePath}/ai`,
+          label: "Get AI Guidance",
+          icon: FiMessageSquare,
+        },
       ];
     }
     if (roleSegment === "authority") {
-      return [
-        { to: basePath, label: "Home", icon: FiHome },
-      ];
+      return [{ to: basePath, label: "Home", icon: FiHome }];
     }
     // vacc_centre / centre role
     return [
       { to: basePath, label: "Home", icon: FiHome },
-      { to: `${basePath}/appointments`, label: "View Appointments", icon: FiClipboard },
+      {
+        to: `${basePath}/appointments`,
+        label: "View Appointments",
+        icon: FiClipboard,
+      },
       { to: `${basePath}/stock`, label: "Vaccine Stock", icon: FiDatabase },
-      { to: `${basePath}/forecast`, label: "Demand Forecasting", icon: FiBarChart2 },
+      {
+        to: `${basePath}/forecast`,
+        label: "Demand Forecasting",
+        icon: FiBarChart2,
+      },
       { to: `${basePath}/staff`, label: "Staff Management", icon: FiUsers },
       { to: `${basePath}/logs`, label: "Logs", icon: FiActivity },
-      { to: `${basePath}/insights`, label: "AI Insights", icon: FiMessageSquare },
+      {
+        to: `${basePath}/insights`,
+        label: "Preservation Guidance",
+        icon: GoDependabot,
+      },
     ];
   }, [roleSegment, basePath]);
 
@@ -148,7 +174,11 @@ const DashboardLayout = () => {
               >
                 <Icon
                   className={
-                    (to === basePath ? location.pathname === to : location.pathname.startsWith(to))
+                    (
+                      to === basePath
+                        ? location.pathname === to
+                        : location.pathname.startsWith(to)
+                    )
                       ? "text-[#F04E36]"
                       : "text-[#081F2E]/80"
                   }
@@ -170,7 +200,11 @@ const DashboardLayout = () => {
                 }
               >
                 <FiSettings
-                  className={location.pathname.startsWith(`${basePath}/settings`) ? "text-[#F04E36]" : "text-[#081F2E]/80"}
+                  className={
+                    location.pathname.startsWith(`${basePath}/settings`)
+                      ? "text-[#F04E36]"
+                      : "text-[#081F2E]/80"
+                  }
                 />
                 {!collapsed && <span>Settings</span>}
               </NavLink>
