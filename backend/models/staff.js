@@ -1,23 +1,17 @@
 const mongoose = require('mongoose');
 
-
-
 const staffSchema = new mongoose.Schema({
-      id: {
+      staff_id: {
         type: String,
         required: true,
       },
-      name: {
-        type: String,
-        required: true,
-      },
-      password: {
+      centre_id: {
         type: String,
         required: true,
       },
       vaccine_list: [
         {
-          center_vaccine_id: {
+          centre_vaccine_id: {
             type: String,
             required: true,
           },

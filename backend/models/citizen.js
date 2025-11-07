@@ -64,7 +64,7 @@ module.exports = Citizen;
 //citizen:
 // update citizen info api (basic info, like name, gender, phone number)
 
-//centre
+//staff
 // add vaccine taken, post api (vaccine_taken : [vaccine_id, name, time_stamp])
 
 //anyone:

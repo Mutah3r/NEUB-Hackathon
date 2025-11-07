@@ -105,4 +105,74 @@ router.post('/login', controller.login);
 // Vacc centre adds staff
 router.post('/staff', authenticateToken, authorizeRoles('vacc_centre'), controller.addStaff);
 
+/**
+ * @swagger
+ * /api/vacc_centre/{id}:
+ *   put:
+ *     summary: Update vaccination centre (authority or centre)
+ *     tags: [VaccCentre]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               location: { type: string }
+ *               district: { type: string }
+ *               lattitude: { type: number }
+ *               longitude: { type: number }
+ *               password: { type: string }
+ *     responses:
+ *       200:
+ *         description: Centre updated
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not found
+ */
+router.put('/:id', authenticateToken, authorizeRoles('authority', 'vacc_centre'), controller.updateCentre);
+
+/**
+ * @swagger
+ * /api/vacc_centre:
+ *   get:
+ *     summary: Get all vaccination centres (authority only)
+ *     tags: [VaccCentre]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of centres
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id: { type: string }
+ *                   vc_id: { type: string }
+ *                   name: { type: string }
+ *                   location: { type: string }
+ *                   district: { type: string }
+ *                   lattitude: { type: number }
+ *                   longitude: { type: number }
+ *                   staff_count: { type: number }
+ *       403:
+ *         description: Forbidden
+ */
+router.get('/', authenticateToken, authorizeRoles('authority'), controller.listCentres);
+
 module.exports = router;

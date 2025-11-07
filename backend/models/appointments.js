@@ -48,7 +48,7 @@ module.exports = Appointment;
 
 
 // citizen:
-// create appointment
+// create appointment (with requested status)
 // get all vaccine appointment by citizen id 
 // get all vaccine appointment by citizen id and status- separate api
 // update status (only to cancelled)
@@ -57,8 +57,10 @@ module.exports = Appointment;
 
 // vaccine center:
 // get all vaccine appointment by center id 
-// get all vaccine appointment by center id and status and time
-// update status (requested to scheduled to done.),  done status will be using QR or appointment id.
+// get all vaccine appointment by center id and status and time-separate api
+// update status (scheduled to done, missed),  
+// done status will be using QR or appointment id,
+
 
 
 

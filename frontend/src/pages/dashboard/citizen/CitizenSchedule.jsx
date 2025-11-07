@@ -369,7 +369,7 @@ const CitizenSchedule = () => {
                       Available: {formatLongDate(c.availableDate)}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-end gap-2">
                     <button
                       onClick={() => {
                         setActiveCentre(c);
