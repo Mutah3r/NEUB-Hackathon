@@ -66,3 +66,8 @@ module.exports = CentreVaccine;
 
 // stuff
 // update (total_people, total_dosed, total_wasted)
+
+
+
+// Citizen:
+// get all vaccine center by vaccine id: 
