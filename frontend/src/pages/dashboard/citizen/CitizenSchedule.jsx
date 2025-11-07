@@ -1,64 +1,22 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { FiCalendar, FiChevronDown, FiMapPin, FiSearch } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiCalendar,
+  FiChevronDown,
+  FiMapPin,
+  FiSearch,
+} from "react-icons/fi";
 import GoogleMap from "../../../components/GoogleMap";
 import MapModal from "../../../components/MapModal";
 import Notification from "../../../components/Notification";
 import ScheduleRequestModal from "../../../components/ScheduleRequestModal";
 import { getVaccines } from "../../../services/authorityService";
+import { getAvailableCentresByVaccine } from "../../../services/centreVaccineService";
 
 // Vaccines will be fetched from API
 
-const centresMock = [
-  {
-    id: "c1",
-    name: "Agra Vaccination Centre",
-    address: "Tajganj, Agra, Uttar Pradesh",
-    lat: 27.1751498,
-    lng: 78.0399519,
-    availableDate: "2025-11-10T00:00:00.000Z",
-  },
-  {
-    id: "c2",
-    name: "Agra District Clinic",
-    address: "Near Mathura Rd, Agra District",
-    lat: 27.234567,
-    lng: 77.918394,
-    availableDate: "2025-11-12T00:00:00.000Z",
-  },
-  {
-    id: "c3",
-    name: "Kanpur Health Centre",
-    address: "Near Kanpur, Uttar Pradesh",
-    lat: 26.1751498,
-    lng: 79.0399519,
-    availableDate: "2025-11-15T00:00:00.000Z",
-  },
-  {
-    id: "c4",
-    name: "Dummy Health Centre",
-    address: "Near Kanpur, Uttar Pradesh",
-    lat: 26.234552,
-    lng: 78.0839519,
-    availableDate: "2025-11-15T00:00:00.000Z",
-  },
-  {
-    id: "c5",
-    name: "Dummy Health Centre 2",
-    address: "Near Kanpur, Uttar Pradesh",
-    lat: 25.1988383,
-    lng: 79.0399519,
-    availableDate: "2025-11-15T00:00:00.000Z",
-  },
-  {
-    id: "c6",
-    name: "Dummy Health Centre 3",
-    address: "Connaught Place, New Delhi",
-    lat: 28.6139,
-    lng: 77.209,
-    availableDate: "2025-11-25T00:00:00.000Z",
-  },
-];
+// Centres will be fetched based on selected vaccine
 
 const formatLongDate = (iso) => {
   if (!iso) return "-";
@@ -79,7 +37,7 @@ const CitizenSchedule = () => {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [activeCentre, setActiveCentre] = useState(centresMock[0]);
+  const [activeCentre, setActiveCentre] = useState(null);
   const [showAllMarkers, setShowAllMarkers] = useState(true);
   const [mapOpen, setMapOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
@@ -89,26 +47,23 @@ const CitizenSchedule = () => {
     type: "success",
     message: "",
   });
-  const [visibleMarkers, setVisibleMarkers] = useState(
-    centresMock.map((c) => ({
-      id: c.id,
-      lat: c.lat,
-      lng: c.lng,
-      title: c.name,
-    }))
-  );
+  const [visibleMarkers, setVisibleMarkers] = useState([]);
   const [findingNearest, setFindingNearest] = useState(false);
   const [geoError, setGeoError] = useState(null);
+  const [availableCentres, setAvailableCentres] = useState([]);
+  const [centresLoading, setCentresLoading] = useState(false);
+  const [centresError, setCentresError] = useState("");
   const [vaccines, setVaccines] = useState([]);
   const [vaccinesLoading, setVaccinesLoading] = useState(false);
   const [vaccinesError, setVaccinesError] = useState("");
   const isNearestMode =
-    visibleMarkers.length > 0 && visibleMarkers.length < centresMock.length;
+    visibleMarkers.length > 0 &&
+    visibleMarkers.length < availableCentres.length;
   const visibleCentres = useMemo(() => {
     const ids = new Set(visibleMarkers.map((m) => m.id));
-    if (ids.size === centresMock.length) return centresMock;
-    return centresMock.filter((c) => ids.has(c.id));
-  }, [visibleMarkers]);
+    if (ids.size === availableCentres.length) return availableCentres;
+    return availableCentres.filter((c) => ids.has(c.id));
+  }, [visibleMarkers, availableCentres]);
 
   const filteredVaccines = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -154,16 +109,67 @@ const CitizenSchedule = () => {
     };
   }, []);
 
-  const mapMarkers = useMemo(
-    () =>
-      centresMock.map((c) => ({
-        id: c.id,
-        lat: c.lat,
-        lng: c.lng,
-        title: c.name,
-      })),
-    []
-  );
+  // Fetch centres when a vaccine is selected
+  useEffect(() => {
+    async function fetchAvailable() {
+      const vid = selected?.id;
+      if (!vid) {
+        setAvailableCentres([]);
+        setVisibleMarkers([]);
+        setActiveCentre(null);
+        setCentresError("");
+        return;
+      }
+      setCentresLoading(true);
+      setCentresError("");
+      try {
+        const res = await getAvailableCentresByVaccine(vid);
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+          ? res.data.data
+          : [];
+        const normalized = list.map((item, idx) => {
+          const centre = item.centre || {};
+          const address = [centre.location, centre.district]
+            .filter(Boolean)
+            .join(", ");
+          return {
+            id: centre.id ?? centre.vc_id ?? `c-${idx}`,
+            vc_id: centre.vc_id,
+            name: centre.name ?? "Unnamed Centre",
+            address,
+            lat: centre.lattitude,
+            lng: centre.longitude,
+            stock: item.stock?.current_stock ?? null,
+          };
+        });
+        setAvailableCentres(normalized);
+        if (normalized.length > 0) {
+          const markers = normalized.map((c) => ({
+            id: c.id,
+            lat: c.lat,
+            lng: c.lng,
+            title: c.name,
+          }));
+          setVisibleMarkers(markers);
+          setActiveCentre(normalized[0]);
+          setShowAllMarkers(true);
+        } else {
+          setVisibleMarkers([]);
+          setActiveCentre(null);
+        }
+      } catch (err) {
+        const msg = err?.message || "Failed to load available centres";
+        setCentresError(msg);
+      } finally {
+        setCentresLoading(false);
+      }
+    }
+    fetchAvailable();
+  }, [selected?.id]);
 
   const haversineKm = (lat1, lon1, lat2, lon2) => {
     const toRad = (v) => (v * Math.PI) / 180;
@@ -183,6 +189,11 @@ const CitizenSchedule = () => {
   const showNearestThree = () => {
     setFindingNearest(true);
     setGeoError(null);
+    if (!availableCentres || availableCentres.length === 0) {
+      setGeoError("No centres available for selected vaccine");
+      setFindingNearest(false);
+      return;
+    }
     if (!navigator.geolocation) {
       setGeoError("Geolocation not supported in this browser");
       setFindingNearest(false);
@@ -191,7 +202,7 @@ const CitizenSchedule = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        const ranked = centresMock
+        const ranked = availableCentres
           .map((c) => ({
             ...c,
             distance: haversineKm(latitude, longitude, c.lat, c.lng),
@@ -219,14 +230,13 @@ const CitizenSchedule = () => {
   };
 
   const showAllCentres = () => {
-    setVisibleMarkers(
-      centresMock.map((c) => ({
-        id: c.id,
-        lat: c.lat,
-        lng: c.lng,
-        title: c.name,
-      }))
-    );
+    const markers = availableCentres.map((c) => ({
+      id: c.id,
+      lat: c.lat,
+      lng: c.lng,
+      title: c.name,
+    }));
+    setVisibleMarkers(markers);
     setShowAllMarkers(true);
   };
 
@@ -375,125 +385,174 @@ const CitizenSchedule = () => {
       </div>
 
       {/* Centres + Map layout */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Centres list */}
+      {centresLoading && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 24 }}
           className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#081F2E]/10 p-6"
-          layout
         >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F04E36]/10 text-[#F04E36] ring-1 ring-[#F04E36]/20">
-              <FiMapPin />
-            </div>
-            <h3 className="text-lg font-semibold text-[#081F2E]">
-              Available Centres
-            </h3>
-          </div>
-          <div className="space-y-3">
-            <AnimatePresence initial={false}>
-              {visibleCentres.map((c) => (
-                <motion.div
-                  key={c.id}
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                  className="rounded-xl bg-white ring-1 ring-[#081F2E]/10 p-4 flex items-start justify-between"
-                >
-                  <div>
-                    <div className="font-semibold text-[#081F2E]">{c.name}</div>
-                    <div className="text-sm text-[#0c2b40]/70">{c.address}</div>
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <button
-                      onClick={() => {
-                        setActiveCentre(c);
-                        setMapOpen(true);
-                      }}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#EAB308] text-white px-3 py-2 text-sm font-medium hover:bg-[#d4a006]"
-                    >
-                      <FiMapPin />
-                      <span>Map</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setRequestCentre(c);
-                        setRequestOpen(true);
-                      }}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#F04E36] text-white px-3 py-2 text-sm font-medium hover:bg-[#e3452f]"
-                    >
-                      Book Appointment
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <div className="flex items-center gap-2 text-sm text-[#0c2b40]/70">
+            <div className="h-5 w-5 rounded-full border-2 border-[#081F2E] border-t-transparent animate-spin" />
+            Searching available centres…
           </div>
         </motion.div>
-
-        {/* Right-side map with all markers overlay */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#081F2E]/10 p-6"
-        >
-          <div className="flex items-center justify-between mb-3">
+      )}
+      {centresError && (
+        <div className="text-sm text-[#F04E36]">{centresError}</div>
+      )}
+      {selected &&
+        !centresLoading &&
+        !centresError &&
+        availableCentres.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#F04E36]/15 p-6"
+          >
             <div className="flex items-center gap-3">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F04E36]/10 text-[#F04E36] ring-1 ring-[#F04E36]/20">
+                <FiAlertTriangle />
+              </div>
+              <div>
+                <div className="text-base font-semibold text-[#081F2E]">
+                  Not Available
+                </div>
+                <div className="text-sm text-[#0c2b40]/80">
+                  This vaccine is currently not available at any centre.
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      {availableCentres.length > 0 && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Centres list */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#081F2E]/10 p-6"
+            layout
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F04E36]/10 text-[#F04E36] ring-1 ring-[#F04E36]/20">
                 <FiMapPin />
               </div>
               <h3 className="text-lg font-semibold text-[#081F2E]">
-                Centres Map
+                Available Centres
               </h3>
             </div>
-            <button
-              onClick={() =>
-                isNearestMode ? showAllCentres() : showNearestThree()
-              }
-              disabled={findingNearest}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#F04E36] to-[#EAB308] text-white px-3 py-2 text-sm font-semibold shadow ring-1 ring-white/10 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#F04E36]/40"
-            >
-              {findingNearest
-                ? "Locating..."
-                : isNearestMode
-                ? "Show All"
-                : "Show nearest"}
-            </button>
-          </div>
-          <div className="mb-2 flex items-center justify-between">
-            <div className="text-xs text-[#0c2b40]/60">
-              Click a marker or select a centre.
+            <div className="space-y-3">
+              <AnimatePresence initial={false}>
+                {visibleCentres.map((c) => (
+                  <motion.div
+                    key={c.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                    className="rounded-xl bg-white ring-1 ring-[#081F2E]/10 p-4 flex items-start justify-between"
+                  >
+                    <div>
+                      <div className="font-semibold text-[#081F2E]">
+                        {c.name}
+                      </div>
+                      <div className="text-sm text-[#0c2b40]/70">
+                        {c.address}
+                      </div>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <button
+                        onClick={() => {
+                          setActiveCentre(c);
+                          setMapOpen(true);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#EAB308] text-white px-3 py-2 text-sm font-medium hover:bg-[#d4a006]"
+                      >
+                        <FiMapPin />
+                        <span>Map</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRequestCentre(c);
+                          setRequestOpen(true);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#F04E36] text-white px-3 py-2 text-sm font-medium hover:bg-[#e3452f]"
+                      >
+                        Book Appointment
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
-          </div>
-          <GoogleMap
-            markers={visibleMarkers}
-            activeId={activeCentre.id}
-            showAll={showAllMarkers}
-            onMarkerClick={(m) => {
-              setActiveCentre(m);
-              setShowAllMarkers(false);
-            }}
-            height={380}
-          />
-          {geoError && (
-            <div className="mt-2 text-xs text-[#F04E36]">{geoError}</div>
-          )}
-        </motion.div>
-      </div>
+          </motion.div>
+
+          {/* Right-side map with all markers overlay */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#081F2E]/10 p-6"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
+                  <FiMapPin />
+                </div>
+                <h3 className="text-lg font-semibold text-[#081F2E]">
+                  Centres Map
+                </h3>
+              </div>
+              <button
+                onClick={() =>
+                  isNearestMode ? showAllCentres() : showNearestThree()
+                }
+                disabled={findingNearest}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#F04E36] to-[#EAB308] text-white px-3 py-2 text-sm font-semibold shadow ring-1 ring-white/10 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#F04E36]/40"
+              >
+                {findingNearest
+                  ? "Locating..."
+                  : isNearestMode
+                  ? "Show All"
+                  : "Show nearest"}
+              </button>
+            </div>
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-xs text-[#0c2b40]/60">
+                Click a marker or select a centre.
+              </div>
+            </div>
+            <GoogleMap
+              markers={visibleMarkers}
+              activeId={activeCentre ? activeCentre.id : undefined}
+              showAll={showAllMarkers}
+              onMarkerClick={(m) => {
+                setActiveCentre(m);
+                setShowAllMarkers(false);
+              }}
+              height={380}
+            />
+            {geoError && (
+              <div className="mt-2 text-xs text-[#F04E36]">{geoError}</div>
+            )}
+          </motion.div>
+        </div>
+      )}
 
       {/* Map modal */}
-      <MapModal
-        isOpen={mapOpen}
-        onClose={() => setMapOpen(false)}
-        lat={activeCentre.lat}
-        lng={activeCentre.lng}
-        title={activeCentre.name}
-      />
+      {activeCentre && (
+        <MapModal
+          isOpen={mapOpen}
+          onClose={() => setMapOpen(false)}
+          lat={activeCentre.lat}
+          lng={activeCentre.lng}
+          title={activeCentre.name}
+        />
+      )}
       <ScheduleRequestModal
         isOpen={requestOpen}
         onClose={() => setRequestOpen(false)}
