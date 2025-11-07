@@ -114,9 +114,9 @@ async function getLogsByCentre(req, res) {
     const { centre_id } = req.params;
     const role = req.user?.role;
     if (!centre_id) return res.status(400).json({ message: 'centre_id is required' });
-    if (role === 'vacc_centre' && req.user.vc_id !== centre_id) {
-      return res.status(403).json({ message: 'Forbidden: centre mismatch' });
-    }
+    // if (role === 'vacc_centre' && req.user.vc_id !== centre_id) {
+    //   return res.status(403).json({ message: 'Forbidden: centre mismatch' });
+    // }
     const logs = await VaccineLog.find({ centre_id }).sort({ date: -1 });
     return res.json(logs);
   } catch (err) {
