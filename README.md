@@ -180,10 +180,8 @@ A dedicated Python module (`AI_and_ML/`) leverages data-driven models for automa
 | Feature | ML Tool | Benefit |
 | :--- | :--- | :--- |
 | **Demand Forecasting** | **Meta Prophet Model** | Predicts appointment volumes by center/date, informing capacity planning and stock requests. |
-| **Capacity Optimization** | **ML Recommendations** | Recommends optimal adjustments to stock and daily appointment limits based on forecasted demand. |
-| **No-Show Prediction** | **Classification Model** | Identifies high-risk appointments to trigger proactive reminders (via SMS/Email) and resource reallocation. |
+| **Waste Forecasting** | **Meta Prophet Model** | Predicts appointment volumes by center/date, informing capacity planning and stock requests. |
 | **Anomaly Detection** | **ML Model** | Flags unusual patterns in dose usage or wastage logs to improve accountability and prevent stock pilferage. |
-| **Citizen Segmentation** | **Clustering/Embedding (Gemini API)** | Groups citizens by behavior/history to tailor outreach campaigns for improved uptake and compliance. |
 | **Prompt/Response Engine** | **Gemini API (LLM)** | Utilized for advanced search, help documentation generation, or summarizing complex reports. |
 
 -----
