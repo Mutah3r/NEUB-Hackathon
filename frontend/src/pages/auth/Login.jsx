@@ -74,7 +74,10 @@ const Login = () => {
       setSubmittingOtp(false);
       if (code === "1234") {
         setOtpOpen(false);
-        navigate("/");
+        // Persist role and a mock token for session
+        localStorage.setItem("role", "citizen");
+        localStorage.setItem("auth_token", "mock_token_citizen");
+        navigate("/dashboard/citizen");
       } else {
         setError("Invalid OTP. Try again.");
       }
@@ -89,7 +92,19 @@ const Login = () => {
       return;
     }
     // Mock login
-    setTimeout(() => navigate("/"), 700);
+    setTimeout(() => {
+      // Persist role and a mock token
+      const role = activeTab === "centre" ? "centre" : activeTab === "authority" ? "authority" : "citizen";
+      localStorage.setItem("role", role);
+      localStorage.setItem("auth_token", `mock_token_${role}`);
+      if (role === "centre") {
+        navigate("/dashboard/centre");
+      } else if (role === "authority") {
+        navigate("/dashboard/authority");
+      } else {
+        navigate("/dashboard/citizen");
+      }
+    }, 700);
   };
 
   return (
