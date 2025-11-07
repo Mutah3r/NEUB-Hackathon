@@ -77,4 +77,63 @@ router.post('/register', authenticateToken, authorizeRoles('authority'), control
 // Authority login with email/password
 router.post('/login', controller.login);
 
+/**
+ * @swagger
+ * /api/authority/citizen:
+ *   post:
+ *     summary: Create a citizen directly (authority only, no OTP)
+ *     tags: [Authority]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reg_no]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               reg_no:
+ *                 type: string
+ *               NID_no:
+ *                 type: string
+ *               Birth_Certificate_no:
+ *                 type: string
+ *               NID_or_Birth:
+ *                 type: boolean
+ *               gender:
+ *                 type: string
+ *               DOB:
+ *                 type: string
+ *                 format: date
+ *               phone_number:
+ *                 type: string
+ *               vaccine_certificate_qr:
+ *                 type: string
+ *               vaccine_taken:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     vaccine_id:
+ *                       type: string
+ *                     vaccine_name:
+ *                       type: string
+ *                     time_stamp:
+ *                       type: string
+ *                       format: date-time
+ *     responses:
+ *       201:
+ *         description: Citizen created
+ *       400:
+ *         description: Missing required fields
+ *       403:
+ *         description: Forbidden
+ *       409:
+ *         description: Conflict (duplicate reg_no)
+ */
+router.post('/citizen', authenticateToken, authorizeRoles('authority'), controller.addCitizenDirect);
+
 module.exports = router;
