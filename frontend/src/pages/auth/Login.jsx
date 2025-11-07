@@ -13,6 +13,7 @@ import OTPModal from "../../components/OTPModal";
 import EmailModal from "../../components/EmailModal";
 import Notification from "../../components/Notification";
 import { requestCitizenLoginOtp, verifyLoginOtp } from "../../services/citizenService";
+import { authorityLogin } from "../../services/authorityService";
 
 const TABS = [
   { key: "citizen", label: "Citizen", icon: FiPhone },
@@ -36,6 +37,7 @@ const Login = () => {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "" });
+  const [credentialSubmitting, setCredentialSubmitting] = useState(false);
 
   const tabIndex = useMemo(
     () => TABS.findIndex((t) => t.key === activeTab),
@@ -96,27 +98,39 @@ const Login = () => {
     }
   };
 
-  const handleCredentialLogin = () => {
+  const handleCredentialLogin = async () => {
     setError("");
     const validEmail = /.+@.+\..+/.test(email);
     if (!validEmail || password.length < 4) {
       setError("Check your email and password.");
       return;
     }
-    // Mock login
-    setTimeout(() => {
-      // Persist role and a mock token
-      const role = activeTab === "centre" ? "centre" : activeTab === "authority" ? "authority" : "citizen";
-      localStorage.setItem("role", role);
-      localStorage.setItem("auth_token", `mock_token_${role}`);
-      if (role === "centre") {
-        navigate("/dashboard/centre");
-      } else if (role === "authority") {
+
+    if (activeTab === "authority") {
+      try {
+        setCredentialSubmitting(true);
+        const res = await authorityLogin({ email, password });
+        const token = res?.token;
+        if (token) localStorage.setItem("auth_token", token);
+        localStorage.setItem("role", "authority");
+        setToast({ show: true, message: "Logged in successfully." });
+        setTimeout(() => setToast({ show: false, message: "" }), 3500);
         navigate("/dashboard/authority");
-      } else {
-        navigate("/dashboard/citizen");
+      } catch (err) {
+        setError(err?.message || "Invalid credentials. Please try again.");
+      } finally {
+        setCredentialSubmitting(false);
       }
-    }, 700);
+    } else if (activeTab === "centre") {
+      // Keep existing mock for centre login
+      setCredentialSubmitting(true);
+      setTimeout(() => {
+        localStorage.setItem("role", "centre");
+        localStorage.setItem("auth_token", "mock_token_centre");
+        navigate("/dashboard/centre");
+        setCredentialSubmitting(false);
+      }, 700);
+    }
   };
 
   return (
@@ -245,9 +259,10 @@ const Login = () => {
             </button>
             <button
               onClick={handleCredentialLogin}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#F04E36] text-white px-4 py-2 font-medium hover:bg-[#e3452f]"
+              disabled={credentialSubmitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#F04E36] text-white px-4 py-2 font-medium hover:bg-[#e3452f] disabled:opacity-50"
             >
-              Login
+              {credentialSubmitting ? "Logging in..." : "Login"}
             </button>
           </div>
         </motion.div>
@@ -295,9 +310,10 @@ const Login = () => {
             </button>
             <button
               onClick={handleCredentialLogin}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#F04E36] text-white px-4 py-2 font-medium hover:bg-[#e3452f]"
+              disabled={credentialSubmitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#F04E36] text-white px-4 py-2 font-medium hover:bg-[#e3452f] disabled:opacity-50"
             >
-              Login
+              {credentialSubmitting ? "Logging in..." : "Login"}
             </button>
           </div>
         </motion.div>
