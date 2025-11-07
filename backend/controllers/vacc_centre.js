@@ -85,3 +85,86 @@ async function addStaff(req, res) {
 }
 
 module.exports = { register, login, addStaff };
+
+async function updateCentre(req, res) {
+  try {
+    const { id } = req.params;
+    const role = req.user?.role;
+    if (!id) {
+      return res.status(400).json({ message: 'id param is required' });
+    }
+    if (!role) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    if (role === 'vacc_centre' && req.user?.sub !== id) {
+      return res.status(403).json({ message: 'Forbidden: cannot update other centres' });
+    }
+
+    const { name, location, district, lattitude, longitude, password } = req.body;
+    if (
+      name === undefined &&
+      location === undefined &&
+      district === undefined &&
+      lattitude === undefined &&
+      longitude === undefined &&
+      password === undefined
+    ) {
+      return res.status(400).json({ message: 'Provide at least one field to update' });
+    }
+
+    const centre = await VaccCentre.findById(id);
+    if (!centre) {
+      return res.status(404).json({ message: 'vacc_centre not found' });
+    }
+
+    if (name !== undefined) centre.name = name;
+    if (location !== undefined) centre.location = location;
+    if (district !== undefined) centre.district = district;
+    if (lattitude !== undefined) centre.lattitude = lattitude;
+    if (longitude !== undefined) centre.longitude = longitude;
+    if (password !== undefined) {
+      const hashed = await bcrypt.hash(password, 10);
+      centre.password = hashed;
+    }
+
+    await centre.save();
+    return res.json({
+      id: centre._id,
+      vc_id: centre.vc_id,
+      name: centre.name,
+      location: centre.location,
+      district: centre.district,
+      lattitude: centre.lattitude,
+      longitude: centre.longitude,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to update vacc_centre' });
+  }
+}
+
+module.exports.updateCentre = updateCentre;
+
+// Authority: list all vaccination centres
+async function listCentres(req, res) {
+  try {
+    if (req.user?.role !== 'authority') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    const centres = await VaccCentre.find({});
+    const data = centres.map((c) => ({
+      id: c._id,
+      vc_id: c.vc_id,
+      name: c.name,
+      location: c.location,
+      district: c.district,
+      lattitude: c.lattitude,
+      longitude: c.longitude,
+      staff_count: Array.isArray(c.staffs) ? c.staffs.length : 0,
+    }));
+    return res.status(200).json(data);
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to list centres' });
+  }
+}
+
+module.exports.listCentres = listCentres;

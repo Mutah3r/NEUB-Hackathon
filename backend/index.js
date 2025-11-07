@@ -53,6 +53,9 @@ app.use('/api/citizen', require('./routes/citizen'));
 app.use('/api/staff', require('./routes/staff'));
 app.use('/api/vaccine', require('./routes/vaccine'));
 app.use('/api/global', require('./routes/overall'));
+app.use('/api/appointment', require('./routes/appointment'));
+app.use('/api/centre_vaccine', require('./routes/centre_vaccine'));
+
 
 app.listen(8000, () => {
   console.log('Server is running on port 8000');
