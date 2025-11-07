@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { FiClipboard, FiUsers, FiCalendar, FiBell, FiX } from "react-icons/fi";
+import { FiBell, FiCalendar, FiClipboard, FiUsers, FiX } from "react-icons/fi";
 import {
   Bar,
   BarChart,
@@ -122,14 +122,22 @@ const FutureDatePicker = ({ selectedDate, onDateChange }) => {
   const goPrevMonth = () => {
     const prev = new Date(viewYear, viewMonth - 1, 1);
     // Prevent navigating before minDate's month
-    const minMonthStart = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    const minMonthStart = new Date(
+      minDate.getFullYear(),
+      minDate.getMonth(),
+      1
+    );
     if (prev < minMonthStart) return;
     setViewMonth(prev.getMonth());
     setViewYear(prev.getFullYear());
   };
   const goNextMonth = () => {
     const next = new Date(viewYear, viewMonth + 1, 1);
-    const maxMonthStart = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+    const maxMonthStart = new Date(
+      maxDate.getFullYear(),
+      maxDate.getMonth(),
+      1
+    );
     if (next > maxMonthStart) return;
     setViewMonth(next.getMonth());
     setViewYear(next.getFullYear());
@@ -152,7 +160,9 @@ const FutureDatePicker = ({ selectedDate, onDateChange }) => {
           <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#081F2E]/10 text-[#081F2E] ring-1 ring-[#081F2E]/20">
             <FiCalendar />
           </div>
-          <span className="text-sm font-medium text-[#081F2E]">{monthLabel}</span>
+          <span className="text-sm font-medium text-[#081F2E]">
+            {monthLabel}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -338,7 +348,9 @@ const CentreAppointments = () => {
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
             <FiClipboard />
           </div>
-          <h2 className="text-xl font-semibold text-[#081F2E]">View Appointments</h2>
+          <h2 className="text-xl font-semibold text-[#081F2E]">
+            View Appointments
+          </h2>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -374,7 +386,9 @@ const CentreAppointments = () => {
                     <FiClipboard />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-[#081F2E]">Future Appointments</h3>
+                    <h3 className="text-lg font-semibold text-[#081F2E]">
+                      Future Appointments
+                    </h3>
                     <div className="text-xs text-[#0c2b40]/70">
                       {selectedFutureDate
                         ? selectedFutureDate.toLocaleDateString("en-GB", {
@@ -401,16 +415,22 @@ const CentreAppointments = () => {
                   {/* Left: Appointment List */}
                   <div className="rounded-2xl bg-white/70 backdrop-blur-md shadow-sm ring-1 ring-[#081F2E]/10 p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm font-medium text-[#081F2E]">Appointments</div>
+                      <div className="text-sm font-medium text-[#081F2E]">
+                        Appointments
+                      </div>
                       <div className="flex items-center gap-2">
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          disabled={!selectedFutureDate || futureAppointments.length === 0}
+                          disabled={
+                            !selectedFutureDate ||
+                            futureAppointments.length === 0
+                          }
                           onClick={sendNotification}
                           className={
                             "inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ring-1 shadow-sm " +
-                            (!selectedFutureDate || futureAppointments.length === 0
+                            (!selectedFutureDate ||
+                            futureAppointments.length === 0
                               ? "bg-[#081F2E]/10 text-[#081F2E]/50 ring-[#081F2E]/15 cursor-not-allowed"
                               : "bg-[#EAB308] text-[#081F2E] ring-[#EAB308]/30 hover:bg-[#EAB308]/90")
                           }
@@ -428,7 +448,8 @@ const CentreAppointments = () => {
                         exit={{ opacity: 0, y: -6 }}
                         className="mb-3 text-xs inline-flex items-center gap-2 px-2 py-1 rounded-md bg-[#2FC94E]/15 text-[#081F2E] ring-1 ring-[#2FC94E]/30"
                       >
-                        Notifications queued for {futureAppointments.length} users
+                        Notifications queued for {futureAppointments.length}{" "}
+                        users
                       </motion.div>
                     )}
 
@@ -438,11 +459,12 @@ const CentreAppointments = () => {
                           Select a date from the picker to load appointments.
                         </div>
                       )}
-                      {selectedFutureDate && futureAppointments.length === 0 && (
-                        <div className="text-xs text-[#0c2b40]/70">
-                          No appointments found for the selected date.
-                        </div>
-                      )}
+                      {selectedFutureDate &&
+                        futureAppointments.length === 0 && (
+                          <div className="text-xs text-[#0c2b40]/70">
+                            No appointments found for the selected date.
+                          </div>
+                        )}
                       <AnimatePresence initial={false}>
                         {futureAppointments.map((p, idx) => (
                           <motion.div
@@ -450,12 +472,21 @@ const CentreAppointments = () => {
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
-                            transition={{ type: "spring", stiffness: 260, damping: 24, delay: idx * 0.03 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 260,
+                              damping: 24,
+                              delay: idx * 0.03,
+                            }}
                             className="rounded-xl bg-white ring-1 ring-[#081F2E]/10 p-4 flex items-center justify-between hover:bg-[#081F2E]/3"
                           >
                             <div>
-                              <div className="text-[#081F2E] font-semibold">{p.name}</div>
-                              <div className="text-xs text-[#0c2b40]/70">Time: {p.time}</div>
+                              <div className="text-[#081F2E] font-semibold">
+                                {p.name}
+                              </div>
+                              <div className="text-xs text-[#0c2b40]/70">
+                                Time: {p.time}
+                              </div>
                             </div>
                             <span className="inline-flex items-center rounded-md px-2 py-1 text-xs bg-[#EAB308]/15 text-[#EAB308] ring-1 ring-[#EAB308]/25">
                               {p.vaccine}
@@ -492,7 +523,9 @@ const CentreAppointments = () => {
             <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#081F2E]/10 text-[#081F2E] ring-1 ring-[#081F2E]/20">
               <FiUsers />
             </div>
-            <h3 className="text-lg font-semibold text-[#081F2E]">Today's Scheduled Patients</h3>
+            <h3 className="text-lg font-semibold text-[#081F2E]">
+              Today's Scheduled Patients
+            </h3>
           </div>
           <span className="inline-flex items-center rounded-md px-2 py-1 text-xs bg-[#081F2E]/5 text-[#081F2E] ring-1 ring-[#081F2E]/15">
             Total: {todaysCount}
@@ -543,7 +576,6 @@ const CentreAppointments = () => {
               Scheduling (Next 2 Weeks)
             </h3>
           </div>
-          <span className="text-xs text-[#0c2b40]/70">Mock data</span>
         </div>
 
         {/* Chart */}
