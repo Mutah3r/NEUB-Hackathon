@@ -1,8 +1,15 @@
-import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  FiHelpCircle,
+  FiHome,
+  FiLock,
+  FiMail,
+  FiPhone,
+  FiShield,
+} from "react-icons/fi";
 import { useNavigate } from "react-router";
 import OTPModal from "../../components/OTPModal";
-import { FiPhone, FiHome, FiShield, FiMail, FiLock, FiHelpCircle } from "react-icons/fi";
 
 const TABS = [
   { key: "citizen", label: "Citizen", icon: FiPhone },
@@ -19,8 +26,14 @@ const Login = () => {
   const [otpOpen, setOtpOpen] = useState(false);
   const [submittingOtp, setSubmittingOtp] = useState(false);
   const [error, setError] = useState("");
+  const containerRef = useRef(null);
+  const tabRefs = useRef([]);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, height: 40 });
 
-  const tabIndex = useMemo(() => TABS.findIndex((t) => t.key === activeTab), [activeTab]);
+  const tabIndex = useMemo(
+    () => TABS.findIndex((t) => t.key === activeTab),
+    [activeTab]
+  );
 
   const handleSendOtp = () => {
     setError("");
@@ -31,6 +44,23 @@ const Login = () => {
     // Mock sending OTP
     setTimeout(() => setOtpOpen(true), 300);
   };
+
+  // Measure active tab to place indicator precisely
+  useEffect(() => {
+    const updateIndicator = () => {
+      const idx = tabIndex;
+      const el = tabRefs.current[idx];
+      const containerEl = containerRef.current;
+      if (!el || !containerEl) return;
+      const left = el.offsetLeft;
+      const width = el.offsetWidth;
+      const height = el.offsetHeight;
+      setIndicator({ left, width, height });
+    };
+    updateIndicator();
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [tabIndex]);
 
   const handleOtpSubmit = (code) => {
     setSubmittingOtp(true);
@@ -62,15 +92,21 @@ const Login = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Login</h2>
-          <p className="text-sm text-[#0c2b40]/70">Choose your role and continue</p>
+          <p className="text-sm text-[#0c2b40]/70">
+            Choose your role and continue
+          </p>
         </div>
       </div>
 
       <div className="relative">
-        <div className="grid grid-cols-3 gap-2 rounded-xl bg-[#081F2E]/5 p-1">
+        <div
+          ref={containerRef}
+          className="relative grid grid-cols-3 gap-2 rounded-xl bg-[#081F2E]/5 p-1"
+        >
           {TABS.map((tab, i) => (
             <button
               key={tab.key}
+              ref={(el) => (tabRefs.current[i] = el)}
               onClick={() => setActiveTab(tab.key)}
               className={`relative z-10 inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
                 activeTab === tab.key ? "text-[#081F2E]" : "text-[#0c2b40]/70"
@@ -80,19 +116,26 @@ const Login = () => {
               {tab.label}
             </button>
           ))}
+          <motion.div
+            className="absolute top-1 left-1 rounded-lg bg-white shadow ring-1 ring-[#F04E36]/20"
+            initial={false}
+            animate={{
+              x: indicator.left,
+              width: indicator.width,
+              height: indicator.height,
+            }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+          />
         </div>
-        <motion.div
-          className="absolute top-1 left-1 h-10 rounded-lg bg-white shadow ring-1 ring-[#F04E36]/20"
-          initial={false}
-          animate={{ x: tabIndex * (100 + 8) }}
-          transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          style={{ width: 100 }}
-        />
       </div>
 
       {/* Content */}
       {activeTab === "citizen" && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
           <label className="block text-sm font-medium">Phone Number</label>
           <input
             type="tel"
@@ -122,7 +165,11 @@ const Login = () => {
       )}
 
       {activeTab === "centre" && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
           <div className="grid gap-3">
             <label className="block text-sm font-medium">Email</label>
             <div className="relative">
@@ -168,7 +215,11 @@ const Login = () => {
       )}
 
       {activeTab === "authority" && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
           <div className="grid gap-3">
             <label className="block text-sm font-medium">Email</label>
             <div className="relative">
