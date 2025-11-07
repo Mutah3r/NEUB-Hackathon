@@ -1,4 +1,5 @@
 const Vaccine = require('../models/vaccine');
+const VaccineLog = require('../models/vaccine_log');
 
 async function addVaccine(req, res) {
   try {
@@ -50,3 +51,94 @@ async function listVaccines(req, res) {
 }
 
 module.exports.listVaccines = listVaccines;
+
+async function createVaccineLog(req, res) {
+  try {
+    if (req.user?.role !== 'staff') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    const { vaccine_id, vaccine_name, citizen_id, date } = req.body;
+    if (!vaccine_id || !vaccine_name || !citizen_id) {
+      return res.status(400).json({ message: 'vaccine_id, vaccine_name, citizen_id are required' });
+    }
+    const centre_id = req.user.vc_id;
+    const staff_id = req.user.staff_id;
+    const logDoc = await VaccineLog.create({
+      citizen_id,
+      centre_id,
+      vaccine_id,
+      vaccine_name,
+      staff_id,
+      date: date ? new Date(date) : new Date(),
+    });
+    return res.status(201).json({
+      id: logDoc._id,
+      citizen_id: logDoc.citizen_id,
+      centre_id: logDoc.centre_id,
+      vaccine_id: logDoc.vaccine_id,
+      vaccine_name: logDoc.vaccine_name,
+      staff_id: logDoc.staff_id,
+      date: logDoc.date,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to create vaccine log' });
+  }
+}
+
+async function getLogsByCentre(req, res) {
+  try {
+    const { centre_id } = req.params;
+    const role = req.user?.role;
+    if (!centre_id) return res.status(400).json({ message: 'centre_id is required' });
+    if (role === 'vacc_centre' && req.user.vc_id !== centre_id) {
+      return res.status(403).json({ message: 'Forbidden: centre mismatch' });
+    }
+    const logs = await VaccineLog.find({ centre_id }).sort({ date: -1 });
+    return res.json(logs);
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to fetch logs by centre' });
+  }
+}
+
+async function getLogsByStaff(req, res) {
+  try {
+    const { staff_id } = req.params;
+    const role = req.user?.role;
+    if (!staff_id) return res.status(400).json({ message: 'staff_id is required' });
+    if (role === 'staff' && req.user.staff_id !== staff_id) {
+      return res.status(403).json({ message: 'Forbidden: staff mismatch' });
+    }
+    let query = { staff_id };
+    if (role === 'vacc_centre') {
+      query.centre_id = req.user.vc_id;
+    }
+    const logs = await VaccineLog.find(query).sort({ date: -1 });
+    return res.json(logs);
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to fetch logs by staff' });
+  }
+}
+
+async function getLogsByCitizen(req, res) {
+  try {
+    const { citizen_id } = req.params;
+    const role = req.user?.role;
+    if (!citizen_id) return res.status(400).json({ message: 'citizen_id is required' });
+    if (role === 'citizen' && req.user.sub !== citizen_id) {
+      return res.status(403).json({ message: 'Forbidden: citizen mismatch' });
+    }
+    let query = { citizen_id };
+    if (role === 'vacc_centre') {
+      query.centre_id = req.user.vc_id;
+    }
+    const logs = await VaccineLog.find(query).sort({ date: -1 });
+    return res.json(logs);
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to fetch logs by citizen' });
+  }
+}
+
+module.exports.createVaccineLog = createVaccineLog;
+module.exports.getLogsByCentre = getLogsByCentre;
+module.exports.getLogsByStaff = getLogsByStaff;
+module.exports.getLogsByCitizen = getLogsByCitizen;

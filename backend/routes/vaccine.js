@@ -95,4 +95,100 @@ router.get('/', authenticateToken, authorizeRoles('authority'), controller.listV
  */
 router.put('/:id', authenticateToken, authorizeRoles('authority'), controller.updateVaccine);
 
+/**
+ * @swagger
+ * /api/vaccine/log:
+ *   post:
+ *     summary: Create vaccine log (staff only)
+ *     tags: [Vaccine Log]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [vaccine_id, vaccine_name, citizen_id]
+ *             properties:
+ *               vaccine_id: { type: string }
+ *               vaccine_name: { type: string }
+ *               citizen_id: { type: string }
+ *               date: { type: string, format: date-time }
+ *     responses:
+ *       201:
+ *         description: Log created
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden
+ */
+router.post('/log', authenticateToken, authorizeRoles('staff'), controller.createVaccineLog);
+
+/**
+ * @swagger
+ * /api/vaccine/log/centre/{centre_id}:
+ *   get:
+ *     summary: Get logs by centre id (authority or centre)
+ *     tags: [Vaccine Log]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: centre_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of logs
+ *       403:
+ *         description: Forbidden
+ */
+router.get('/log/centre/:centre_id', authenticateToken, authorizeRoles('authority', 'vacc_centre'), controller.getLogsByCentre);
+
+/**
+ * @swagger
+ * /api/vaccine/log/staff/{staff_id}:
+ *   get:
+ *     summary: Get logs by staff id (staff/authority/centre)
+ *     tags: [Vaccine Log]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: staff_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of logs
+ *       403:
+ *         description: Forbidden
+ */
+router.get('/log/staff/:staff_id', authenticateToken, authorizeRoles('staff', 'authority', 'vacc_centre'), controller.getLogsByStaff);
+
+/**
+ * @swagger
+ * /api/vaccine/log/citizen/{citizen_id}:
+ *   get:
+ *     summary: Get logs by citizen id (citizen/authority/centre)
+ *     tags: [Vaccine Log]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: citizen_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of logs
+ *       403:
+ *         description: Forbidden
+ */
+router.get('/log/citizen/:citizen_id', authenticateToken, authorizeRoles('citizen','staff', 'authority', 'vacc_centre'), controller.getLogsByCitizen);
+
 module.exports = router;
