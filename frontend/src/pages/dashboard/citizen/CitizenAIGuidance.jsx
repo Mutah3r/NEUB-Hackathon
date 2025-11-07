@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { FiMessageSquare, FiSend, FiZap } from "react-icons/fi";
+import { askGuidance } from "../../../services/aiService";
 
 const CitizenAIGuidance = () => {
   const SUGGESTIONS = [
@@ -14,6 +15,7 @@ const CitizenAIGuidance = () => {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const mockAIResponse = (prompt) => {
     const p = prompt.toLowerCase();
@@ -50,16 +52,22 @@ const CitizenAIGuidance = () => {
     return "I can provide general guidance. For personalized recommendations, please consult a healthcare professional or follow your local immunization schedule.";
   };
 
-  const onSend = () => {
+  const onSend = async () => {
     const prompt = input.trim();
     if (!prompt) return;
     setLoading(true);
-    // Simulate AI processing
-    setTimeout(() => {
-      const res = mockAIResponse(prompt);
-      setResponse(res);
+    setError("");
+    setResponse("");
+    try {
+      const res = await askGuidance(prompt);
+      const text =
+        typeof res === "string" ? res : res?.response || "No guidance found.";
+      setResponse(text);
+    } catch (e) {
+      setError(e?.message || "Failed to fetch AI guidance");
+    } finally {
       setLoading(false);
-    }, 650);
+    }
   };
 
   return (
@@ -88,6 +96,39 @@ const CitizenAIGuidance = () => {
 
         {/* Response area (appears above composer) */}
         <AnimatePresence>
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: "spring", stiffness: 260, damping: 24 }}
+              className="rounded-xl bg-white ring-1 ring-[#081F2E]/10 p-4 mb-4"
+            >
+              <div className="flex items-center gap-2 mb-2 text-[#081F2E] font-medium">
+                <div className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#081F2E]/10 text-[#081F2E]">
+                  <FiZap />
+                </div>
+                Thinking...
+              </div>
+              <div className="text-sm text-[#0c2b40]/80 leading-relaxed">
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-block h-4 w-4 rounded-full border-2 border-[#EAB308] border-t-transparent animate-spin"></span>
+                  The AI is preparing your guidance.
+                </span>
+              </div>
+            </motion.div>
+          )}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: "spring", stiffness: 260, damping: 24 }}
+              className="rounded-xl bg-red-50 ring-1 ring-red-200 p-4 mb-4 text-red-700"
+            >
+              {error}
+            </motion.div>
+          )}
           {response && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -102,7 +143,7 @@ const CitizenAIGuidance = () => {
                 </div>
                 AI Guidance
               </div>
-              <div className="text-sm text-[#0c2b40]/80 leading-relaxed">
+              <div className="text-sm text-[#0c2b40]/80 leading-relaxed whitespace-pre-line">
                 {response}
               </div>
             </motion.div>
