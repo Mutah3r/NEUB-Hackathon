@@ -59,7 +59,7 @@ export default function HomeScreen({ user, onScanAppt, onCitizenVaccines, onDemo
               <Text style={styles.tileIcon}>🪪</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.tileTitle}>Scan Vaccination Card</Text>
-                <Text style={styles.tileDesc}>Demo UI (coming soon)</Text>
+                <Text style={styles.tileDesc}>Scan card and add vaccine data</Text>
               </View>
             </TouchableOpacity>
           </View>
