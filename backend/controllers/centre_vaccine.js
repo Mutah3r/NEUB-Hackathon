@@ -326,12 +326,17 @@ async function getAssignedForCentre(req, res) {
 // Authority: get all vaccines assigned to a specific centre (by centre_id)
 async function getAssignedForCentreByAuthority(req, res) {
   try {
-    if (req.user.role !== 'authority') {
-      return res.status(403).json({ message: 'Forbidden: authority only' });
+    if (req.user.role !== 'authority' && req.user.role !== 'vacc_centre') {
+      return res.status(403).json({ message: 'Forbidden: authority or vacc_centre only' });
     }
-    const { centre_id } = req.params;
+    let { centre_id } = req.params;
     if (!centre_id) {
-      return res.status(400).json({ message: 'centre_id is required' });
+      // Allow vacc_centre users to omit centre_id and use their own vc_id
+      if (req.user && req.user.role === 'vacc_centre' && req.user.vc_id) {
+        centre_id = req.user.vc_id;
+      } else {
+        return res.status(400).json({ message: 'centre_id is required' });
+      }
     }
     const assigned = await CentreVaccine.find({ centre_id })
       .select('vaccine_name')
