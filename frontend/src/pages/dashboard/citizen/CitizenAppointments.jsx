@@ -42,6 +42,7 @@ const STATUS_META = {
 
 import { getAppointmentsByCitizen } from "../../../services/appointmentService";
 import { getCurrentUser } from "../../../services/userService";
+import ImageModal from "../../../components/ImageModal";
 
 const toDisplayIso = (dateIso, timeRaw) => {
   try {
@@ -87,6 +88,16 @@ const CitizenAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrSrc, setQrSrc] = useState("");
+  const [qrTitle, setQrTitle] = useState("");
+
+  const openQr = (src, vaccine) => {
+    if (!src) return;
+    setQrSrc(src);
+    setQrTitle(`QR Code - ${vaccine || "Appointment"}`);
+    setQrOpen(true);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -114,6 +125,7 @@ const CitizenAppointments = () => {
               : item.status || "scheduled",
           time: toDisplayIso(item.date, item.time),
           centre: item.center_id || "-",
+          qr_code: item.qr_url,
         }));
         if (!mounted) return;
         setAppointments(normalized);
@@ -244,6 +256,9 @@ const CitizenAppointments = () => {
                 <th className="text-left text-xs font-semibold text-[#081F2E] px-4 py-3">
                   Centre
                 </th>
+                <th className="text-left text-xs font-semibold text-[#081F2E] px-4 py-3">
+                  QR Code
+                </th>
               </tr>
             </thead>
             <AnimatePresence initial={false}>
@@ -286,6 +301,20 @@ const CitizenAppointments = () => {
                       <td className="px-4 py-3 text-sm text-[#0c2b40]/80">
                         {a.centre}
                       </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => openQr(a.qr_code, a.vaccine)}
+                          className="w-12 h-12 rounded-md bg-[#081F2E]/5 flex items-center justify-center hover:bg-[#081F2E]/10 focus:outline-none"
+                          aria-label={`Open QR Code for ${a.vaccine}`}
+                        >
+                          <img
+                            src={a.qr_code}
+                            alt={`QR Code for ${a.vaccine}`}
+                            className="w-8 h-8"
+                          />
+                        </button>
+                      </td>
                     </motion.tr>
                   );
                 })}
@@ -296,7 +325,7 @@ const CitizenAppointments = () => {
                     exit={{ opacity: 0 }}
                   >
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-4 py-6 text-center text-sm text-[#0c2b40]/70"
                     >
                       No appointments found for the selected status.
@@ -308,6 +337,12 @@ const CitizenAppointments = () => {
           </table>
         </div>
       </div>
+      <ImageModal
+        isOpen={qrOpen}
+        onClose={() => setQrOpen(false)}
+        imageUrl={qrSrc}
+        title={qrTitle}
+      />
     </motion.section>
   );
 };
