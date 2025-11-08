@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiCalendar,
   FiCreditCard,
@@ -7,23 +7,55 @@ import {
   FiEyeOff,
   FiMapPin,
   FiUser,
-  FiXCircle,
 } from "react-icons/fi";
-import MapModal from "../../components/MapModal";
 import CancelModal from "../../components/CancelModal";
+import MapModal from "../../components/MapModal";
 import PdfModal from "../../components/PdfModal";
+import { getAppointmentsByCitizen } from "../../services/appointmentService";
+import { getVaccineCentres } from "../../services/centreService";
+import { getCurrentUser } from "../../services/userService";
 
 const CitizenDashboard = () => {
-  // Dummy profile data (can be wired to backend later)
-  const profile = useMemo(
-    () => ({
-      name: "Md. Rahim Uddin",
-      nidOrBirth: "1990123456789",
-      tikaRegNo: "TS-00012345",
-      dob: "1995-04-21",
-    }),
-    []
-  );
+  const [profile, setProfile] = useState({
+    name: "-",
+    nidOrBirth: "",
+    tikaRegNo: "-",
+    dob: "-",
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const user = await getCurrentUser();
+        if (!mounted || !user) return;
+        const idNumber = user?.NID_or_Birth
+          ? user?.NID_no
+          : user?.Birth_Certificate_no;
+        const dob = user?.DOB
+          ? new Date(user.DOB).toISOString().slice(0, 10)
+          : "-";
+        setProfile({
+          name: user?.name || "-",
+          nidOrBirth: idNumber || "-",
+          tikaRegNo: user?.reg_no || "-",
+          dob,
+        });
+        const cid =
+          user?.citizen_id ||
+          user?.id ||
+          user?.data?.citizen_id ||
+          user?.data?.id ||
+          null;
+        if (cid) setCitizenId(cid);
+      } catch (e) {
+        // keep defaults on error
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [showSensitive, setShowSensitive] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
@@ -33,29 +65,81 @@ const CitizenDashboard = () => {
     title: "Centre Location",
   });
 
-  const [upcoming, setUpcoming] = useState([
-    {
-      vaccine: "COVID-19 Booster",
-      centre: "Dhaka Central Vaccination Centre",
-      date: "2025-12-02",
-      lat: 23.780573,
-      lng: 90.407604,
-    },
-    {
-      vaccine: "Hepatitis B",
-      centre: "Banani Health Complex",
-      date: "2025-12-12",
-      lat: 23.7935,
-      lng: 90.4043,
-    },
-    {
-      vaccine: "Influenza Seasonal",
-      centre: "Uttara Medical Point",
-      date: "2025-12-28",
-      lat: 23.8766,
-      lng: 90.38,
-    },
-  ]);
+  const [upcoming, setUpcoming] = useState([]);
+  const [citizenId, setCitizenId] = useState(null);
+  const [centreMap, setCentreMap] = useState({});
+
+  // Hydrate centres and upcoming appointments
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        // Build centre map for names and coordinates
+        const centreRes = await getVaccineCentres();
+        const centres = Array.isArray(centreRes)
+          ? centreRes
+          : Array.isArray(centreRes?.data)
+          ? centreRes.data
+          : Array.isArray(centreRes?.data?.data)
+          ? centreRes.data.data
+          : [];
+        const map = {};
+        centres.forEach((c, idx) => {
+          const id = c.id ?? c.vc_id ?? `c-${idx + 1}`;
+          map[id] = {
+            name: c.name ?? "Unnamed Centre",
+            lat: Number(c.lattitude ?? c.latitude ?? 23.8103),
+            lng: Number(c.longitude ?? 90.4125),
+          };
+        });
+        if (!mounted) return;
+        setCentreMap(map);
+
+        if (!citizenId) return; // wait for citizen id
+
+        // Fetch appointments for citizen
+        const res = await getAppointmentsByCitizen(citizenId);
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+          ? res.data.data
+          : [];
+        // only show upcoming statuses
+        const normalized = list
+          .filter((item) =>
+            ["requested", "scheduled"].includes(item?.status || "requested")
+          )
+          .map((item, idx) => {
+            const cid =
+              item.center_id ||
+              item.centre_id ||
+              item.centre ||
+              item.center ||
+              `unknown-${idx}`;
+            const centreInfo = map[cid] || {};
+            return {
+              vaccine: item.vaccine_name || "Unknown",
+              centre: centreInfo.name || cid || "-",
+              date: item.date || item.time || "-",
+              lat:
+                typeof centreInfo.lat === "number" ? centreInfo.lat : 23.8103,
+              lng:
+                typeof centreInfo.lng === "number" ? centreInfo.lng : 90.4125,
+            };
+          });
+        if (!mounted) return;
+        setUpcoming(normalized);
+      } catch (err) {
+        // silent fail for dashboard home; keep empty upcoming
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [citizenId]);
 
   const history = [
     {
@@ -193,7 +277,7 @@ const CitizenDashboard = () => {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
-          className="rounded-2xl bg-white shadow ring-1 ring-[#F04E36]/10 overflow-hidden"
+          className="rounded-2xl bg-white shadow ring-1 ring-[#F04E36]/10 overflow-hidden hidden"
         >
           <div className="p-5 border-b border-[#081F2E]/10 flex items-center justify-between">
             <h2 className="text-xl font-bold">Upcoming Schedule</h2>
@@ -212,7 +296,7 @@ const CitizenDashboard = () => {
                     <th className="text-left px-4 py-3 text-sm font-semibold text-[#0c2b40]">
                       Date
                     </th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-[#0c2b40]">Cancel</th>
+                    {/* Cancel column removed */}
                   </tr>
                 </thead>
                 <tbody>
@@ -238,15 +322,10 @@ const CitizenDashboard = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[#0c2b40]">{formatLongDate(row.date)}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => openCancel(row, idx)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-[#F04E36]/10 text-[#F04E36] px-2 py-1 text-xs hover:bg-[#F04E36]/20"
-                        >
-                          <FiXCircle /> Cancel
-                        </button>
+                      <td className="px-4 py-3 text-[#0c2b40]">
+                        {formatLongDate(row.date)}
                       </td>
+                      {/* Cancel action removed */}
                     </motion.tr>
                   ))}
                 </tbody>
@@ -273,7 +352,8 @@ const CitizenDashboard = () => {
           </div>
           <div className="p-5">
             <p className="text-sm text-[#0c2b40]/80">
-              Access your digitally signed vaccine card. View and download for official use.
+              Access your digitally signed vaccine card. View and download for
+              official use.
             </p>
           </div>
         </motion.section>
@@ -354,7 +434,12 @@ const CitizenDashboard = () => {
       />
 
       {/* PDF Modal */}
-      <PdfModal isOpen={pdfOpen} onClose={() => setPdfOpen(false)} pdfUrl={pdfUrl} title="E‑Vaccine Card" />
+      <PdfModal
+        isOpen={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        pdfUrl={pdfUrl}
+        title="E‑Vaccine Card"
+      />
     </div>
   );
 };
