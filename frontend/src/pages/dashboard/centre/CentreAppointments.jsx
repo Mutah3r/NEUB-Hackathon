@@ -13,11 +13,13 @@ import {
   YAxis,
 } from "recharts";
 import { getCurrentUser } from "../../../services/userService";
-import { getTodaysScheduledByCentre } from "../../../services/appointmentService";
+import { getTodaysScheduledByCentre, getScheduledCountsNext14 } from "../../../services/appointmentService";
 
 const PRIMARY = "#081F2E";
 const ACCENT = "#EAB308";
 const BAR_COLOR = "#2FC94E"; // matches centre dashboard weekly chart
+
+// -- Two-week bar chart component --
 
 // Replaced by todayPatients loaded from API
 const SCHEDULED_PATIENTS = [];
@@ -213,39 +215,12 @@ const FutureDatePicker = ({ selectedDate, onDateChange }) => {
   );
 };
 
-const ChartTwoWeeks = () => {
-  const capacity = 40; // mock maximum capacity per day
-  const data = useMemo(() => {
-    const today = new Date();
-    const start = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
-    const days = [];
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(
-        start.getFullYear(),
-        start.getMonth(),
-        start.getDate() + i
-      );
-      const label = d.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-      });
-      // mock scheduled counts with gentle variation and some peaks
-      const base = 18 + Math.round(Math.random() * 20);
-      const weekendBoost = [0, 6].includes(d.getDay()) ? 6 : 0; // Sat/Sun slight boost
-      const scheduled = Math.min(base + weekendBoost, 48);
-      days.push({ day: label, scheduled });
-    }
-    return days;
-  }, []);
-
+const ChartTwoWeeks = ({ data = [], capacity = 40 }) => {
   const yMax = useMemo(() => {
+    if (!data.length) return 10;
     const maxVal = Math.max(...data.map((d) => d.scheduled), capacity);
-    return maxVal + 6; // headroom for labels
-  }, [data]);
+    return maxVal + 6;
+  }, [data, capacity]);
 
   return (
     <div className="h-72">
@@ -317,6 +292,19 @@ const CentreAppointments = () => {
   const [todayPatients, setTodayPatients] = useState([]);
   const [todayLoading, setTodayLoading] = useState(true);
   const [todayError, setTodayError] = useState("");
+  const [next14, setNext14] = useState([]);
+  const [graphLoading, setGraphLoading] = useState(true);
+  const graphData = useMemo(() => {
+    const days = next14.map((d) => {
+      const dateObj = new Date(d.date);
+      const label = dateObj.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+      });
+      return { day: label, scheduled: d.scheduled || d.scheduled_count || 0 };
+    });
+    return days;
+  }, [next14]);
   const todaysCount = todayPatients.length;
 
   useEffect(() => {
@@ -346,6 +334,29 @@ const CentreAppointments = () => {
       }
     }
     loadToday();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Fetch next 14-day scheduled counts for graph
+  useEffect(() => {
+    let mounted = true;
+    async function loadNext14() {
+      try {
+        setGraphLoading(true);
+        const res = await getScheduledCountsNext14();
+        if (!mounted) return;
+        const list = Array.isArray(res?.days) ? res.days : res;
+        setNext14(list);
+      } catch (err) {
+        if (!mounted) return;
+        console.error("Failed to load next 14 days graph", err);
+      } finally {
+        if (mounted) setGraphLoading(false);
+      }
+    }
+    loadNext14();
     return () => {
       mounted = false;
     };
@@ -620,7 +631,7 @@ const CentreAppointments = () => {
         </div>
 
         {/* Chart */}
-        <ChartTwoWeeks />
+        {!graphLoading && <ChartTwoWeeks data={graphData} capacity={40} />}
       </motion.div>
     </motion.section>
   );

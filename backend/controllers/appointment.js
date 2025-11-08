@@ -84,10 +84,17 @@ async function cancelAppointment(req, res) {
 // Centre: get all appointments by centre id
 async function getAppointmentsByCentre(req, res) {
   try {
-    const { centre_id } = req.params;
+    let { centre_id } = req.params;
     const role = req.user?.role;
     if (!['vacc_centre', 'authority', 'staff'].includes(role)) {
       return res.status(403).json({ message: 'Forbidden' });
+    }
+    // If centre_id not supplied in path, derive from authenticated user (vc_id)
+    if (!centre_id) {
+      centre_id = req.user?.vc_id;
+      if (!centre_id) {
+        return res.status(400).json({ message: 'Missing centre id' });
+      }
     }
     if (role !== 'authority' && req.user?.vc_id !== centre_id) {
       return res.status(403).json({ message: 'Forbidden: cannot access other centres' });
@@ -138,10 +145,17 @@ async function getAppointmentsByCentreStatusAndTime(req, res) {
 // Centre: get today's scheduled appointments by centre id
 async function getTodaysScheduledByCentre(req, res) {
   try {
-    const { centre_id } = req.params;
+    let { centre_id } = req.params;
     const role = req.user?.role;
     if (!['vacc_centre', 'authority', 'staff'].includes(role)) {
       return res.status(403).json({ message: 'Forbidden' });
+    }
+    // Derive centre_id from authenticated user if not provided in params (e.g., new route variant)
+    if (!centre_id) {
+      centre_id = req.user?.vc_id;
+    }
+    if (!centre_id) {
+      return res.status(400).json({ message: 'Missing centre_id' });
     }
     if (role !== 'authority' && req.user?.vc_id !== centre_id) {
       return res.status(403).json({ message: 'Forbidden: cannot access other centres' });
@@ -165,14 +179,20 @@ async function getTodaysScheduledByCentre(req, res) {
 // Centre: get scheduled counts over a date range (default next 14 days)
 async function getScheduledCountsByCentreDateRange(req, res) {
   try {
-    const { centre_id } = req.params;
+    let { centre_id } = req.params;
     const role = req.user?.role;
     if (!['vacc_centre', 'authority', 'staff'].includes(role)) {
       return res.status(403).json({ message: 'Forbidden' });
     }
-    if (role !== 'authority' && req.user?.vc_id !== centre_id) {
-      return res.status(403).json({ message: 'Forbidden: cannot access other centres' });
+    if (!centre_id) {
+      centre_id = req.user?.vc_id;
     }
+    if (!centre_id) {
+      return res.status(400).json({ message: 'Missing centre_id' });
+    }
+    // if (role !== 'authority' && req.user?.vc_id !== centre_id) {
+    //   return res.status(403).json({ message: 'Forbidden: cannot access other centres' });
+    // }
 
     const now = new Date();
     let start = req.query.start ? new Date(req.query.start) : new Date(now);

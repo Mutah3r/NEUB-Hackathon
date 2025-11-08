@@ -157,3 +157,53 @@ async function getCentreAppointmentLogs(req, res) {
 }
 
 module.exports.getCentreAppointmentLogs = getCentreAppointmentLogs;
+
+// Citizen: generate vaccine card QR and store the QR link on the citizen record
+// Access: citizen
+// Takes citizen id from req.user.sub and aggregates vaccine_taken list
+async function generateVaccineCard(req, res) {
+  try {
+    const role = req.user?.role;
+    const citizenId = req.user?.sub;
+    if (role !== 'citizen' || !citizenId) {
+      return res.status(403).json({ message: 'Forbidden: citizen only' });
+    }
+
+    const citizen = await Citizen.findById(citizenId).select('name vaccine_taken vaccine_certificate_qr');
+    if (!citizen) {
+      return res.status(404).json({ message: 'Citizen not found' });
+    }
+
+    const vaccines = Array.isArray(citizen.vaccine_taken)
+      ? citizen.vaccine_taken.map((v) => ({
+          vaccine_id: v?.vaccine_id || null,
+          vaccine_name: v?.vaccine_name || null,
+          time_stamp: v?.time_stamp ? new Date(v.time_stamp).toISOString() : null,
+        })).filter((v) => v.vaccine_id && v.vaccine_name)
+      : [];
+
+    const payload = {
+      citizen_id: citizenId,
+      citizen_name: citizen.name || null,
+      vaccines,
+      generated_at: new Date().toISOString(),
+    };
+
+    const qrPayload = JSON.stringify(payload);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrPayload)}`;
+
+    citizen.vaccine_certificate_qr = qrUrl;
+    await citizen.save();
+
+    return res.status(200).json({
+      message: 'Vaccine card QR generated',
+      qr_url: qrUrl,
+      payload,
+    });
+  } catch (err) {
+    console.error('generateVaccineCard error:', err);
+    return res.status(500).json({ message: 'Failed to generate vaccine card QR' });
+  }
+}
+
+module.exports.generateVaccineCard = generateVaccineCard;

@@ -245,6 +245,8 @@ router.get('/centre/:centre_id/status/scheduled/date/today', authenticateToken, 
  *         description: Forbidden
  */
 router.get('/centre/:centre_id/scheduled/next-14-days', authenticateToken, authorizeRoles('vacc_centre', 'authority', 'staff'), controller.getScheduledCountsByCentreDateRange);
+// New route variant: derive centre id from authenticated user (vc_id)
+router.get('/centre/scheduled/next-14-days', authenticateToken, authorizeRoles('vacc_centre', 'staff'), controller.getScheduledCountsByCentreDateRange);
 
 /**
  * @swagger

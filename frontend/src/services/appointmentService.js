@@ -23,4 +23,8 @@ export function getAppointmentsByCitizen(citizen_id) {
   return api.get(`/appointment/citizen/${citizen_id}`);
 }
 
-export default { getTodaysScheduledByCentre, getCentreCapacityNext30, createAppointment, getAppointmentsByCitizen };
+export function getScheduledCountsNext14() {
+  return api.get(`/appointment/centre/scheduled/next-14-days`);
+}
+
+export default { getTodaysScheduledByCentre, getCentreCapacityNext30, createAppointment, getAppointmentsByCitizen, getScheduledCountsNext14 };
