@@ -11,13 +11,10 @@ import {
 import CancelModal from "../../components/CancelModal";
 import MapModal from "../../components/MapModal";
 import PdfModal from "../../components/PdfModal";
-<<<<<<< HEAD
 import { getAppointmentsByCitizen } from "../../services/appointmentService";
 import { getVaccineCentres } from "../../services/centreService";
-import { getCurrentUser } from "../../services/userService";
-=======
 import { generateCitizenVaccineCard } from "../../services/graphService";
->>>>>>> 39cf44f6d4b86e2f8cf3c6804fe0650ade9fe592
+import { getCurrentUser } from "../../services/userService";
 
 const CitizenDashboard = () => {
   const [profile, setProfile] = useState({
@@ -209,7 +206,9 @@ const CitizenDashboard = () => {
   // Build pretty HTML and trigger browser print (Save as PDF)
   const printVaccineCard = (payload, qrUrl) => {
     const safe = (v) => (v == null ? "" : String(v));
-    const vaccinesHtml = (Array.isArray(payload?.vaccines) ? payload.vaccines : [])
+    const vaccinesHtml = (
+      Array.isArray(payload?.vaccines) ? payload.vaccines : []
+    )
       .map(
         (v, idx) => `
         <tr>
@@ -265,7 +264,9 @@ const CitizenDashboard = () => {
         <div class="header">
           <div>
             <div class="title">National E‑Vaccine Card</div>
-            <div class="meta">Digitally generated card • ${new Date(payload?.generated_at || Date.now()).toLocaleString()}</div>
+            <div class="meta">Digitally generated card • ${new Date(
+              payload?.generated_at || Date.now()
+            ).toLocaleString()}</div>
           </div>
           <div class="badge">Verified Citizen</div>
         </div>
@@ -316,9 +317,9 @@ const CitizenDashboard = () => {
     </body>
     </html>`;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      alert('Popup blocked. Please allow popups to download the PDF.');
+      alert("Popup blocked. Please allow popups to download the PDF.");
       return;
     }
     printWindow.document.open();
@@ -331,14 +332,14 @@ const CitizenDashboard = () => {
       const res = await generateCitizenVaccineCard();
       // res should be { message, qr_url, payload }
       if (!res?.qr_url || !res?.payload) {
-        console.error('Unexpected response for vaccine card:', res);
-        alert('Failed to generate vaccine card.');
+        console.error("Unexpected response for vaccine card:", res);
+        alert("Failed to generate vaccine card.");
         return;
       }
       printVaccineCard(res.payload, res.qr_url);
     } catch (err) {
-      console.error('Generate vaccine card error', err);
-      alert(err?.message || 'Failed to generate vaccine card');
+      console.error("Generate vaccine card error", err);
+      alert(err?.message || "Failed to generate vaccine card");
     }
   };
 
