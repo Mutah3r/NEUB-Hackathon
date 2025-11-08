@@ -321,7 +321,7 @@ const CentreAppointments = () => {
         const normalized = Array.isArray(items)
           ? items.map((a, idx) => ({
               id: a._id || `appt-${idx}`,
-              name: a.citizen_id || "Unknown Citizen",
+              name: a.citizen_name || a.citizen_id || "Unknown Citizen",
               vaccine: a.vaccine_name || "Unknown Vaccine",
             }))
           : [];
