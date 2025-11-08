@@ -59,29 +59,25 @@ const CitizenLogs = () => {
         if (!citizenId) throw new Error("Citizen identity not found");
 
         const res = await getCitizenLogs(citizenId);
-        const list = Array.isArray(res)
-          ? res
-          : Array.isArray(res?.data)
-          ? res.data
-          : Array.isArray(res?.data?.data)
-          ? res.data.data
-          : [];
-
-        const normalized = list.map((item, idx) => ({
-          id: item?._id || `log-${idx}`,
-          vaccine: item?.vaccine_name || "Unknown",
-          centre: item?.centre_id || "-",
-          time: item?.date || null,
-          staff: item?.staff_name || "-",
+        // API client returns response.data directly, which is an array of logs
+        const list = Array.isArray(res) ? res : [];
+        // Normalize logs to ensure consistent keys for rendering
+        const normalized = list.map((l) => ({
+          id: l._id || l.id || "-",
+          citizenId: l.citizen_id || l.citizen || l.citizenId || "-",
+          centreId: l.centre_id || l.centre || l.center_id || "-",
+          vaccineId: l.vaccine_id || l.vaccineId || "-",
+          vaccineName: l.vaccine_name || l.vaccine || "Unknown",
+          staffId: l.staff_id || l.staffId || "-",
+          staffName: l.staff_name || l.staff || "-",
+          date: l.date || l.time || l.time_stamp || null,
         }));
-
         if (!mounted) return;
         setLogs(normalized);
       } catch (e) {
         if (!mounted) return;
-        setError(
-          e?.response?.data?.message || e?.message || "Failed to load logs"
-        );
+        // Interceptor rejects with { message, status, data }
+        setError(e?.data?.message || e?.message || "Failed to load logs");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -114,106 +110,81 @@ const CitizenLogs = () => {
           <table className="min-w-full">
             <thead className="bg-[#081F2E]/5">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">
-                  Vaccine Name
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">
-                  Centre Name
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">
-                  Vaccination Time
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">
-                  Staff Name
-                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Log ID</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Citizen ID</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Centre ID</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Vaccine ID</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Vaccine Name</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Staff ID</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Staff Name</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#081F2E]/80">Vaccination Time</th>
               </tr>
             </thead>
-            <motion.tbody
-              variants={tableVariants}
-              initial="hidden"
-              animate="show"
-              className="divide-y divide-[#081F2E]/10"
-            >
+            <motion.tbody variants={tableVariants} initial="hidden" animate="show" className="divide-y divide-[#081F2E]/10">
               <AnimatePresence>
                 {loading ? (
-                  <motion.tr
-                    key="loader"
-                    variants={rowVariants}
-                    className="hover:bg-transparent"
-                  >
-                    <td
-                      className="px-4 py-6 text-center text-[#081F2E]"
-                      colSpan={4}
-                    >
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="inline-flex items-center gap-2"
-                      >
+                  <motion.tr key="loader" variants={rowVariants} className="hover:bg-transparent">
+                    <td className="px-4 py-6 text-center text-[#081F2E]" colSpan={8}>
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="inline-flex items-center gap-2">
                         <span className="inline-block h-4 w-4 rounded-full border-2 border-[#EAB308] border-t-transparent animate-spin"></span>
                         <span>Loading logs...</span>
                       </motion.div>
                     </td>
                   </motion.tr>
                 ) : error ? (
-                  <motion.tr
-                    key="error"
-                    variants={rowVariants}
-                    className="hover:bg-transparent"
-                  >
-                    <td className="px-4 py-4" colSpan={4}>
-                      <div className="rounded-md bg-red-50 ring-1 ring-red-200 text-red-700 px-3 py-2">
-                        {error}
-                      </div>
+                  <motion.tr key="error" variants={rowVariants} className="hover:bg-transparent">
+                    <td className="px-4 py-4" colSpan={8}>
+                      <div className="rounded-md bg-red-50 ring-1 ring-red-200 text-red-700 px-3 py-2">{error}</div>
                     </td>
                   </motion.tr>
                 ) : logs.length === 0 ? (
-                  <motion.tr
-                    key="empty"
-                    variants={rowVariants}
-                    className="hover:bg-transparent"
-                  >
-                    <td
-                      className="px-4 py-6 text-center text-[#0c2b40]/80"
-                      colSpan={4}
-                    >
-                      No logs found.
-                    </td>
+                  <motion.tr key="empty" variants={rowVariants} className="hover:bg-transparent">
+                    <td className="px-4 py-6 text-center text-[#0c2b40]/80" colSpan={8}>No logs found.</td>
                   </motion.tr>
                 ) : (
-                  logs.map((log) => (
-                    <motion.tr
-                      key={log.id}
-                      variants={rowVariants}
-                      className="hover:bg-[#081F2E]/3"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
-                            <FiActivity />
+                  logs.map((log) => {
+                    const {
+                      id,
+                      citizenId,
+                      centreId,
+                      vaccineId,
+                      vaccineName,
+                      staffId,
+                      staffName,
+                      date,
+                    } = log;
+                    const rowKey = id !== '-' ? id : `${citizenId}-${date || 'unknown'}`;
+                    return (
+                      <motion.tr
+                        key={rowKey}
+                        variants={rowVariants}
+                        className="hover:bg-[#081F2E]/3"
+                      >
+                        <td className="px-4 py-3 text-[#0c2b40]/80">{id}</td>
+                        <td className="px-4 py-3 text-[#0c2b40]/80">{citizenId}</td>
+                        <td className="px-4 py-3 text-[#0c2b40]/80">{centreId}</td>
+                        <td className="px-4 py-3 text-[#0c2b40]/80">{vaccineId}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#EAB308]/20 text-[#EAB308] ring-1 ring-[#EAB308]/30">
+                              <FiActivity />
+                            </div>
+                            <span className="font-medium text-[#081F2E]">{vaccineName}</span>
                           </div>
-                          <span className="font-medium text-[#081F2E]">
-                            {log.vaccine}
+                        </td>
+                        <td className="px-4 py-3 text-[#0c2b40]/80">{staffId}</td>
+                        <td className="px-4 py-3 text-[#0c2b40]/80">{staffName}</td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-2 text-[#081F2E]">
+                            <span className="inline-flex items-center gap-1 rounded-md px-2 py-1 bg-[#081F2E]/10 text-[#081F2E] ring-1 ring-[#081F2E]/15">
+                              <FiCalendar />
+                              {formatDateTime(date)}
+                            </span>
                           </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-[#0c2b40]/80">
-                        {log.centre}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-2 text-[#081F2E]">
-                          <span className="inline-flex items-center gap-1 rounded-md px-2 py-1 bg-[#081F2E]/10 text-[#081F2E] ring-1 ring-[#081F2E]/15">
-                            <FiCalendar />
-                            {formatDateTime(log.time)}
-                          </span>
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[#0c2b40]/80">
-                        {log.staff}
-                      </td>
-                    </motion.tr>
-                  ))
+                        </td>
+                      </motion.tr>
+                    );
+                  })
                 )}
               </AnimatePresence>
             </motion.tbody>

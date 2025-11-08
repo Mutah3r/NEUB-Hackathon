@@ -313,7 +313,7 @@ router.get('/assigned', authenticateToken, authorizeRoles('vacc_centre'), contro
  *       403:
  *         description: Forbidden
  */
-router.get('/assigned/:centre_id', authenticateToken, authorizeRoles('authority'), controller.getAssignedForCentreByAuthority);
+router.get('/assigned/:centre_id', authenticateToken, authorizeRoles('authority', 'vacc_centre'), controller.getAssignedForCentreByAuthority);
 
 /**
  * @swagger

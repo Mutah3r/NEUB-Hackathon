@@ -93,3 +93,26 @@ router.get(
   authorizeRoles('vacc_centre', 'staff'),
   controller.getCentreAppointmentLogs
 );
+
+/**
+ * @swagger
+ * /api/graph/citizen/vaccine-card/generate:
+ *   post:
+ *     summary: Generate vaccination card QR for current citizen and store the QR link
+ *     tags: [Graph]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: QR generated and stored on citizen record
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Citizen not found
+ */
+router.post(
+  '/citizen/vaccine-card/generate',
+  authenticateToken,
+  authorizeRoles('citizen'),
+  controller.generateVaccineCard
+);
