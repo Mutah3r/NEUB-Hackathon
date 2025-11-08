@@ -170,7 +170,21 @@ async function getTodaysScheduledByCentre(req, res) {
       status: 'scheduled',
       date: { $gte: start, $lte: end },
     });
-    return res.status(200).json(items);
+
+    // Enrich with citizen_name using citizen_id
+    const citizenIds = [...new Set(items.map((a) => a.citizen_id))].filter(Boolean);
+    let citizens = [];
+    if (citizenIds.length > 0) {
+      citizens = await Citizen.find({ _id: { $in: citizenIds } }).select('name');
+    }
+    const cMap = new Map(citizens.map((c) => [c._id.toString(), c.name]));
+    const enriched = items.map((a) => {
+      const obj = a.toObject();
+      obj.citizen_name = cMap.get(a.citizen_id) || null;
+      return obj;
+    });
+
+    return res.status(200).json(enriched);
   } catch (err) {
     return res.status(500).json({ message: 'Failed to get today\'s scheduled appointments' });
   }
