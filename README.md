@@ -187,6 +187,7 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h35m03s723.png" alt="Web Demo 2" width="300">
+        <br>
         <figcaption>Login Page</figcaption>
       </figure>
     </td>
@@ -195,12 +196,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h35m32s138.png" alt="Web Demo 3" width="300">
+        <br>
         <figcaption>Citizen Dashboard</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h35m49s044.png" alt="Web Demo 4" width="300">
+        <br>
         <figcaption>E-Vaccine Card</figcaption>
       </figure>
     </td>
@@ -209,12 +212,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h36m46s066.png" alt="Web Demo 5" width="300">
+        <br>
         <figcaption>Schedule Vaccine</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h37m00s199.png" alt="Web Demo 6" width="300">
+        <br>
         <figcaption>Dynamic Scheduling</figcaption>
       </figure>
     </td>
@@ -223,12 +228,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h37m10s333.png" alt="Web Demo 7" width="300">
+        <br>
         <figcaption>My Appointments</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h38m39s475.png" alt="Web Demo 8" width="300">
+        <br>
         <figcaption>AI Guidance</figcaption>
       </figure>
     </td>
@@ -237,12 +244,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h39m10s735.png" alt="Web Demo 9" width="300">
+        <br>
         <figcaption>Vaccine Centre Dashboard</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h39m26s327.png" alt="Web Demo 10" width="300">
+        <br>
         <figcaption>Vaccine Centre Dashboard</figcaption>
       </figure>
     </td>
@@ -251,12 +260,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h39m51s835.png" alt="Web Demo 11" width="300">
+        <br>
         <figcaption>Upcoming Appointments</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h40m10s121.png" alt="Web Demo 12" width="300">
+        <br>
         <figcaption>Vaccine Stock</figcaption>
       </figure>
     </td>
@@ -265,12 +276,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h40m35s962.png" alt="Web Demo 13" width="300">
+        <br>
         <figcaption>Vaccine Forecasting Page</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h40m57s213.png" alt="Web Demo 14" width="300">
+        <br>
         <figcaption>Demand Forecasting</figcaption>
       </figure>
     </td>
@@ -279,12 +292,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h41m12s808.png" alt="Web Demo 15" width="300">
+        <br>
         <figcaption>Staff Management</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h41m28s703.png" alt="Web Demo 16" width="300">
+        <br>
         <figcaption>Assign Staffs With Vaccines</figcaption>
       </figure>
     </td>
@@ -293,12 +308,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h41m40s327.png" alt="Web Demo 17" width="300">
+        <br>
         <figcaption>Centre Logs</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h41m58s055.png" alt="Web Demo 18" width="300">
+        <br>
         <figcaption>Preservation Guideline</figcaption>
       </figure>
     </td>
@@ -307,12 +324,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h42m18s366.png" alt="Web Demo 19" width="300">
+        <br>
         <figcaption>Authority Dashboard</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h42m30s036.png" alt="Web Demo 20" width="300">
+        <br>
         <figcaption>All Vaccines</figcaption>
       </figure>
     </td>
@@ -321,12 +340,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h42m41s015.png" alt="Web Demo 21" width="300">
+        <br>
         <figcaption>All Centres</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h43m05s545.png" alt="Web Demo 22" width="300">
+        <br>
         <figcaption>Stock Requests</figcaption>
       </figure>
     </td>
@@ -335,12 +356,14 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h43m21s820.png" alt="Web Demo 23" width="300">
+        <br>
         <figcaption>Coverage Map</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h43m37s335.png" alt="Web Demo 24" width="300">
+        <br>
         <figcaption>Vaccination Data By Age Group</figcaption>
       </figure>
     </td>
@@ -349,6 +372,7 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/web/vlcsnap-2025-11-14-23h44m04s556.png" alt="Web Demo 25" width="300">
+        <br>
         <figcaption>AI Insights</figcaption>
       </figure>
     </td>
@@ -362,46 +386,56 @@ The TikaSheba roadmap focuses on real-time capabilities, deeper integrations, an
     <td>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122620_Expo%20Go.jpg" alt="Mobile Screenshot 1" width="220">
+        <br>
         <figcaption>Splash Screen</figcaption>
       </figure><br>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122629_Expo%20Go.jpg" alt="Mobile Screenshot 2" width="220">
+        <br>
         <figcaption>Staff Dashboard</figcaption>
       </figure><br>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122710_Expo%20Go.jpg" alt="Mobile Screenshot 3" width="220">
+        <br>
         <figcaption>Appointment Scanner</figcaption>
       </figure><br>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122729_Expo%20Go.jpg" alt="Mobile Screenshot 4" width="220">
+        <br>
         <figcaption>Citizen List</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122752_Expo%20Go.jpg" alt="Mobile Screenshot 5" width="220">
+        <br>
         <figcaption>Citizen Card (OCR)</figcaption>
       </figure><br>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122802_Expo%20Go.jpg" alt="Mobile Screenshot 6" width="220">
+        <br>
         <figcaption>Assigned Vaccine</figcaption>
       </figure><br>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122812_Expo%20Go.jpg" alt="Mobile Screenshot 7" width="220">
+        <br>
         <figcaption>Logs Entry</figcaption>
       </figure>
     </td>
     <td>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122820_Expo%20Go.jpg" alt="Mobile Screenshot 8" width="220">
+        <br>
         <figcaption>Staff Dashboard</figcaption>
       </figure><br>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122830_Expo%20Go.jpg" alt="Mobile Screenshot 9" width="220">
+        <br>
         <figcaption>Appointments</figcaption>
       </figure><br>
       <figure>
         <img src="screenshots/mobile/Screenshot_20251112_122841_Expo%20Go.jpg" alt="Mobile Screenshot 10" width="220">
+        <br>
         <figcaption>Upcoming Schedules</figcaption>
       </figure>
     </td>
